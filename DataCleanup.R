@@ -45,10 +45,9 @@ shootings$Injured <- as.integer(shootings$Injured)
 shootings$Total.victims <- as.integer(shootings$Total.victims)
 shootings$Policeman.Killed <- as.integer(shootings$Policeman.Killed)
 
-
 # Cleaning of age
-shootings$Age <- map(shootings$Age, function(age) sapply(seq(from=1, to=nchar(age), by=2), function(i) substr(shootings$Age, i, i + 1)))
-shootings$Age <- gsub("(.{2})", "\\1;", as.character(shootings$Age));
+shootings$Age2 <- map(shootings$Age, function(age) unlist(strsplit(gsub("(.{2})", "\\1;", as.character(age)), ";")[1])[2])
+shootings$Age <- map(shootings$Age, function(age) unlist(strsplit(gsub("(.{2})", "\\1;", as.character(age)), ";")[1])[1])
 
 # Cleaning Gender column
 shootings$Gender <- tolower(shootings$Gender)
