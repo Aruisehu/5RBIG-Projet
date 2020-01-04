@@ -30,7 +30,7 @@ for(i in 1:nrow(shootings))
 }
 
 # Make map of school shootings
-# qmplot(Longitude, Latitude, shootings = shootings, maptype = "toner-lite", color = Race) +
+# qmplot(Longitude, Latitude, data = shootings, maptype = "toner-lite", color = Race) +
 #   facet_wrap(~ Race)
 
 # Remove unused column
@@ -89,3 +89,8 @@ shootings$Day <- format(shootings$Date, format = "%A")
 shootings$Month <- format(shootings$Date, format ='%B')
 shootings$Year <- as.integer(format(shootings$Date, format = "%Y"))
 shootings$Date <- NULL
+
+# Second point first step
+shootings.cleaned <- shootings %>% mutate(Ten.Casualities.Min = if_else(Total.victims < 10, 0, 1))
+
+write_csv(shootings.cleaned, "./US_Shootings_Cleaned.csv")
