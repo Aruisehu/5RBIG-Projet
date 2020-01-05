@@ -47,14 +47,15 @@ shootings$Total.victims <- as.integer(shootings$Total.victims)
 shootings$Policeman.Killed <- as.integer(shootings$Policeman.Killed)
 
 # Cleaning of age
-shootings$Age2 <- map(shootings$Age, function(age) unlist(strsplit(gsub("(.{2})", "\\1;", as.character(age)), ";")[1])[2])
-shootings$Age <- map(shootings$Age, function(age) unlist(strsplit(gsub("(.{2})", "\\1;", as.character(age)), ";")[1])[1])
+shootings$Age2 <- sapply(map(shootings$Age, function(age) unlist(strsplit(gsub("(.{2})", "\\1;", as.character(age)), ";")[1])[2]), FUN = paste)
+shootings$Age <- sapply(map(shootings$Age, function(age) unlist(strsplit(gsub("(.{2})", "\\1;", as.character(age)), ";")[1])[1]), FUN = paste)
 
 # Cleaning Gender column
 shootings$Gender <- tolower(shootings$Gender)
 shootings <- shootings %>% mutate(Gender = replace(Gender, Gender == "m", "male"))
 shootings <- shootings %>% mutate(Gender = replace(Gender, Gender == "f", "female"))
 shootings <- shootings %>% mutate(Gender = replace(Gender, Gender %in% c("m/f", "male/female"), "unknown"))
+shootings$Gender <- replace_na(shootings$Gender, "unknown")
 
 # Cleaning of Target column
 shootings$Target <- tolower(shootings$Target)
@@ -65,24 +66,29 @@ shootings$Target <- gsub(" ; ", ";", shootings$Target)
 shootings$Race <- tolower(shootings$Race)
 shootings <- shootings %>% mutate(Race = replace(Race, Race == "some other race", "other"))
 shootings <- shootings %>% mutate(Race = replace(Race, Race == "two or more races", "multiple"))
-
 shootings$Race <- gsub("/some other race|/unknown", "", shootings$Race) # not sure if we should remove or place in "multiple" instead
+shootings$Race <- replace_na(shootings$Race, "unknown")
 
 # Cleaning of Mental Health Issue colum
 shootings$Mental.Health.Issues <- tolower(shootings$Mental.Health.Issues)
+shootings$Mental.Health.Issues <- replace_na(shootings$Mental.Health.Issues, "unknown")
+
 
 # Cleaning of Cause column
 shootings$Cause <- tolower(shootings$Cause)
 shootings <- shootings %>% mutate(Cause = replace(Cause, Cause == "domestic disputer", "domestic dispute"))
+shootings$Cause <- replace_na(shootings$Cause, "unknown")
 
 # Cleaning of Open.Close column
 shootings$Open.Close.Location <- tolower(shootings$Open.Close.Location)
 shootings$Open.Close.Location <- gsub("\\+", ";", shootings$Open.Close.Location)
+shootings$Open.Close.Location <- replace_na(shootings$Open.Close.Location, "unknown")
 
 # Cleaning of Weapon.Types
 shootings$Weapon.Type <- tolower(shootings$Weapon.Type)
 shootings$Weapon.Type <- gsub(", ", ";", shootings$Weapon.Type)
 shootings <- shootings %>% mutate(Weapon.Type = replace(Weapon.Type, Weapon.Type == "semi-automatic;handgun", "semi-automatic handgun")) # not sure but the corresponding shootings mention only one semi auto handgun
+shootings$Weapon.Type <- replace_na(shootings$Weapon.Type, "unknown")
 
 # Cleaning of Incident Area
 shootings$Incident.Area <- shootingsSave$`Incident Area`
@@ -221,3 +227,4 @@ shootings$Date <- NULL
 shootings.cleaned <- shootings %>% mutate(Ten.Casualities.Min = if_else(Total.victims < 10, 0, 1))
 
 write_csv(shootings.cleaned, "./US_Shootings_Cleaned.csv")
+
