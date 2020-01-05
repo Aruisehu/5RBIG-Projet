@@ -66,13 +66,16 @@ shootings$Target <- gsub(" ; ", ";", shootings$Target)
 shootings$Race <- tolower(shootings$Race)
 shootings <- shootings %>% mutate(Race = replace(Race, Race == "some other race", "other"))
 shootings <- shootings %>% mutate(Race = replace(Race, Race == "two or more races", "multiple"))
+shootings <- shootings %>% mutate(Race = replace(Race, Race == "black american or african american", "black"))
+shootings <- shootings %>% mutate(Race = replace(Race, Race == "white american or european american", "white"))
+shootings <- shootings %>% mutate(Race = replace(Race, Race == "asian american", "asian"))
+shootings <- shootings %>% mutate(Race = replace(Race, Race == "native american or alaska native", "native american"))
 shootings$Race <- gsub("/some other race|/unknown", "", shootings$Race) # not sure if we should remove or place in "multiple" instead
 shootings$Race <- replace_na(shootings$Race, "unknown")
 
 # Cleaning of Mental Health Issue colum
 shootings$Mental.Health.Issues <- tolower(shootings$Mental.Health.Issues)
 shootings$Mental.Health.Issues <- replace_na(shootings$Mental.Health.Issues, "unknown")
-
 
 # Cleaning of Cause column
 shootings$Cause <- tolower(shootings$Cause)
@@ -91,7 +94,6 @@ shootings <- shootings %>% mutate(Weapon.Type = replace(Weapon.Type, Weapon.Type
 shootings$Weapon.Type <- replace_na(shootings$Weapon.Type, "unknown")
 
 # Cleaning of Incident Area
-shootings$Incident.Area <- shootingsSave$`Incident Area`
 shootings$Incident.Area <- tolower(shootings$Incident.Area)
 shootings$Incident.Area <- gsub("\\+", ";", shootings$Incident.Area)
 
