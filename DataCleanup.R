@@ -64,13 +64,13 @@ shootings$Target <- gsub(" ; ", ";", shootings$Target)
 
 # Cleaning of Race column
 shootings$Race <- tolower(shootings$Race)
+shootings$Race <- gsub("/some other race|/unknown", "", shootings$Race) # not sure if we should remove or place in "multiple" instead
 shootings <- shootings %>% mutate(Race = replace(Race, Race == "some other race", "other"))
 shootings <- shootings %>% mutate(Race = replace(Race, Race == "two or more races", "multiple"))
 shootings <- shootings %>% mutate(Race = replace(Race, Race == "black american or african american", "black"))
 shootings <- shootings %>% mutate(Race = replace(Race, Race == "white american or european american", "white"))
 shootings <- shootings %>% mutate(Race = replace(Race, Race == "asian american", "asian"))
 shootings <- shootings %>% mutate(Race = replace(Race, Race == "native american or alaska native", "native american"))
-shootings$Race <- gsub("/some other race|/unknown", "", shootings$Race) # not sure if we should remove or place in "multiple" instead
 shootings$Race <- replace_na(shootings$Race, "unknown")
 
 # Cleaning of Mental Health Issue colum
@@ -217,6 +217,8 @@ shootings$Incident.Area[shootings$Title == "Dearborn Post Office"] <- "post offi
 shootings$Incident.Area[shootings$Title == "Offices of All-Tech Investment Group and Momentum Securities"] <- "home;company"
 shootings$Incident.Area[shootings$Title == "Planned Parenthood clinic"] <- "street"
 shootings$Incident.Area[shootings$Title == "Massachusetts Abortion Clinic"] <- "hospital"
+
+
 
 # Separate Date in three columns
 shootings$Date <- parse_date_time2(shootings$Date, "mdy", cutoff_2000 = 30)
