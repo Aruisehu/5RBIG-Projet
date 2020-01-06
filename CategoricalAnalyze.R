@@ -41,6 +41,12 @@ shootings.Gender <- shootings %>%
   arrange(desc(Gender))
 shootings.Gender$Label <- scales::percent(shootings.Gender$ShootingsPct)
 
+# Chi Squared test of goodness fit to a uniform distribution
+
+uni_dist <- rep(1/nrow(shootings.Gender), times=nrow(shootings.Gender))
+
+shootings.Gender.ChiTest <- chisq.test(shootings.Gender$Shootings, p = uni_dist)
+
 ggplot(shootings.Gender, aes(x="", y=ShootingsPct, fill=Gender))+
   geom_bar(width = 1, stat = "identity") +
   coord_polar("y", start=0) +
@@ -60,6 +66,12 @@ shootings.Race <- shootings %>%
   mutate(Shootings=`n`) %>% 
   arrange(desc(Race))
 shootings.Race$Label <- scales::percent(shootings.Race$ShootingsPct)
+
+# Chi Squared test of goodness fit to a uniform distribution
+
+uni_dist <- rep(1/nrow(shootings.Race), times=nrow(shootings.Race))
+
+shootings.Race.ChiTest <- chisq.test(shootings.Race$Shootings, p = uni_dist)
 
 ggplot(shootings.Race, 
        aes(x = reorder(Race, -ShootingsPct),
@@ -87,6 +99,12 @@ shootings.IncidentArea <- shootings %>%
   mutate(Shootings=`n`) %>% 
   arrange(desc(Incident.Area))
 shootings.IncidentArea$Label <- scales::percent(shootings.IncidentArea$ShootingsPct)
+
+# Chi Squared test of goodness fit to a uniform distribution
+
+uni_dist <- rep(1/nrow(shootings.IncidentArea), times=nrow(shootings.IncidentArea))
+
+shootings.IncidentArea.ChiTest <- chisq.test(shootings.IncidentArea$Shootings, p = uni_dist)
 
 ggplot(shootings.IncidentArea, 
        aes(x = reorder(Incident.Area, -ShootingsPct),
@@ -116,6 +134,12 @@ shootings.OpenClose <- shootings %>%
   arrange(desc(Open.Close.Location))
 shootings.OpenClose$Label <- scales::percent(shootings.OpenClose$ShootingsPct)
 
+# Chi Squared test of goodness fit to a uniform distribution
+
+uni_dist <- rep(1/nrow(shootings.OpenClose), times=nrow(shootings.OpenClose))
+
+shootings.OpenClose.ChiTest <- chisq.test(shootings.OpenClose$Shootings, p = uni_dist)
+
 ggplot(shootings.OpenClose, aes(x="", y=ShootingsPct, fill=Open.Close.Location))+
   geom_bar(width = 1, stat = "identity") +
   coord_polar("y", start=0) +
@@ -135,6 +159,12 @@ shootings.Target <- shootings %>%
   mutate(Shootings=`n`) %>% 
   arrange(desc(Target))
 shootings.Target$Label <- scales::percent(shootings.Target$ShootingsPct)
+
+# Chi Squared test of goodness fit to a uniform distribution: does the shooting target distribution is uniform alongst target type
+
+uni_dist <- rep(1/nrow(shootings.Target), times=nrow(shootings.Target))
+
+shootings.Target.ChiTest <- chisq.test(shootings.Target$Shootings, p = uni_dist)
 
 ggplot(shootings.Target, 
        aes(x = reorder(Target, -ShootingsPct),
@@ -163,6 +193,12 @@ shootings.Cause <- shootings %>%
   arrange(desc(Cause))
 shootings.Cause$Label <- scales::percent(shootings.Cause$ShootingsPct)
 
+# Chi Squared test of goodness fit to a uniform distribution
+
+uni_dist <- rep(1/nrow(shootings.Cause), times=nrow(shootings.Cause))
+
+shootings.Cause.ChiTest <- chisq.test(shootings.Cause$Shootings, p = uni_dist)
+
 ggplot(shootings.Cause, 
        aes(x = reorder(Cause, -ShootingsPct),
            y = ShootingsPct)) + 
@@ -189,6 +225,13 @@ shootings.WeaponType <- shootings %>%
   mutate(Shootings=`n`) %>% 
   arrange(desc(Weapon.Type))
 shootings.WeaponType$Label <- scales::percent(shootings.WeaponType$ShootingsPct)
+
+# Chi Squared test of goodness fit to a uniform distribution
+
+uni_dist <- rep(1/nrow(shootings.WeaponType), times=nrow(shootings.WeaponType))
+
+shootings.WeaponType.ChiTest <- chisq.test(shootings.WeaponType$Shootings, p = uni_dist)
+
 
 ggplot(shootings.WeaponType, 
        aes(x = reorder(Weapon.Type, -ShootingsPct),
@@ -217,6 +260,12 @@ shootings.MentalHealthIssues <- shootings %>%
   arrange(desc(Mental.Health.Issues))
 shootings.MentalHealthIssues$Label <- scales::percent(shootings.MentalHealthIssues$ShootingsPct)
 
+# Chi Squared test of goodness fit to a uniform distribution
+
+uni_dist <- rep(1/nrow(shootings.MentalHealthIssues), times=nrow(shootings.MentalHealthIssues))
+
+shootings.MentalHealthIssues.ChiTest <- chisq.test(shootings.MentalHealthIssues$Shootings, p = uni_dist)
+
 ggplot(shootings.MentalHealthIssues, 
        aes(x = reorder(Mental.Health.Issues, -ShootingsPct),
            y = ShootingsPct)) + 
@@ -244,6 +293,12 @@ shootings.TenCasualitiesMin <- shootings %>%
   arrange(desc(Ten.Casualities.Min))
 shootings.TenCasualitiesMin$Label <- scales::percent(shootings.TenCasualitiesMin$ShootingsPct)
 
+# Chi Squared test of goodness fit to a uniform distribution
+
+uni_dist <- rep(1/nrow(shootings.TenCasualitiesMin), times=nrow(shootings.TenCasualitiesMin))
+
+shootings.TenCasualitiesMin.ChiTest <- chisq.test(shootings.TenCasualitiesMin$Shootings, p = uni_dist)
+
 ggplot(shootings.TenCasualitiesMin, aes(x="", y=ShootingsPct, fill=Ten.Casualities.Min))+
   geom_bar(width = 1, stat = "identity") +
   coord_polar("y", start=0) +
@@ -254,7 +309,7 @@ ggplot(shootings.TenCasualitiesMin, aes(x="", y=ShootingsPct, fill=Ten.Casualiti
 #################
 ## State study ##
 #################
-
+ 
 shootings.State <- shootings %>% 
   group_by(State) %>%
   count() %>%
@@ -267,6 +322,12 @@ shootings.State.TV <- shootings %>%
   group_by(State) %>%
   summarise(Total.victims = sum(Total.victims)) %>%
   arrange(desc(State))
+
+# Chi Squared test of goodness fit to a uniform distribution
+
+uni_dist <- rep(1/nrow(shootings.State), times=nrow(shootings.State))
+
+shootings.State.ChiTest <- chisq.test(shootings.State$Shootings, p = uni_dist)
 
 shootings.State$state <- shootings.State$State
 shootings.State.TV$state <- shootings.State.TV$State
