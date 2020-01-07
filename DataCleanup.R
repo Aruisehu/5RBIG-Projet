@@ -218,6 +218,8 @@ shootings$Incident.Area[shootings$Title == "Offices of All-Tech Investment Group
 shootings$Incident.Area[shootings$Title == "Planned Parenthood clinic"] <- "street"
 shootings$Incident.Area[shootings$Title == "Massachusetts Abortion Clinic"] <- "hospital"
 
+
+
 # Separate Date in three columns
 shootings$Date <- parse_date_time2(shootings$Date, "mdy", cutoff_2000 = 30)
 shootings$Day <- format(shootings$Date, format = "%A")
