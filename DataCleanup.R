@@ -49,6 +49,7 @@ shootings$Policeman.Killed <- as.integer(shootings$Policeman.Killed)
 # Cleaning of age
 shootings$Age2 <- sapply(map(shootings$Age, function(age) unlist(strsplit(gsub("(.{2})", "\\1;", as.character(age)), ";")[1])[2]), FUN = paste)
 shootings$Age <- sapply(map(shootings$Age, function(age) unlist(strsplit(gsub("(.{2})", "\\1;", as.character(age)), ";")[1])[1]), FUN = paste)
+shootings$Age[shootings$Title == "Ferguson, MO Drive by"] <- NA
 
 # Cleaning Gender column
 shootings$Gender <- tolower(shootings$Gender)
@@ -103,35 +104,26 @@ shootings <- shootings %>%
     # (\\s|$) permit us to ensure that a word end the string or is followed with a whitespace
     # both regular expression permit us to be sure that a detected word isn't a part of a another one, hence corrupting our data
     str_detect(Incident.Area, "(^|\\s)airport(\\s|$)") ~ "airport",
-    str_detect(Incident.Area, "(^|\\s)apartment(\\s|$)") ~ "apartment",
     str_detect(Incident.Area, "(^|\\s)association(\\s|$)") ~ "association",
-    str_detect(Incident.Area, "(^|\\s)bus stop(\\s|$)|(^|\\s)bus station(\\s|$)") ~ "bus stop",
-    str_detect(Incident.Area, "(^|\\s)cafeteria(\\s|$)|(^|\\s)coffee(\\s|$)") ~ "cafe",
-    str_detect(Incident.Area, "(^|\\s)college(\\s|$)") ~ "college",
-    str_detect(Incident.Area, "(^|\\s)club(\\s|$)|(^|\\s)nightclub(\\s|$)") ~ "club",
+    str_detect(Incident.Area, "(^|\\s)bus stop(\\s|$)|(^|\\s)bus station(\\s|$)") ~ "street",
+    str_detect(Incident.Area, "(^|\\s)club(\\s|$)|(^|\\s)nightclub(\\s|$)|(^|\\s)movie theatre(\\s|$)|(^|\\s)spa(\\s|$)") ~ "place of entertainment",
     str_detect(Incident.Area, "(^|\\s)drive-by(\\s|$)") ~ "drive-by",
     str_detect(Incident.Area, "(^|\\s)elementary school(\\s|$)") ~ "elementary school",
-    str_detect(Incident.Area, "(^|\\s)grocery(\\s|$)|(^|\\s)shop(\\s|$)") ~ "shop",
-    str_detect(Incident.Area, "(^|\\s)gas station(\\s|$)") ~ "gas station",
+    str_detect(Incident.Area, "(^|\\s)gas station(\\s|$)|(^|\\s)shop(\\s|$)") ~ "shop",
     str_detect(Incident.Area, "(^|\\s)high school(\\s|$)") ~ "high school",
     str_detect(Incident.Area, "(^|\\s)hospital(\\s|$)") ~ "hospital",
-    str_detect(Incident.Area, "(^|\\s)multiple homes(\\s|$)") ~ "home",
-    str_detect(Incident.Area, "(^|\\s)mall(\\s|$)") ~ "mall",
+    str_detect(Incident.Area, "(^|\\s)multiple homes(\\s|$)|(^|\\s)apartment(\\s|$)") ~ "home",
     str_detect(Incident.Area, "(^|\\s)middle school(\\s|$)") ~ "middle school",
-    str_detect(Incident.Area, "(^|\\s)park(\\s|$)") ~ "park",
-    str_detect(Incident.Area, "(^|\\s)parking(\\s|$)") ~ "park",
     str_detect(Incident.Area, "(^|\\s)party(\\s|$)|(^|\\s)concert(\\s|$)") ~ "event",
-    str_detect(Incident.Area, "(^|\\s)post office(\\s|$)") ~ "post office",
+    str_detect(Incident.Area, "(^|\\s)post office(\\s|$)") ~ "administrative building",
     str_detect(Incident.Area, "(^|\\s)protest(\\s|$)") ~ "protest",
-    str_detect(Incident.Area, "(^|\\s)pub(\\s|$)") ~ "pub",
-    str_detect(Incident.Area, "(^|\\s)restaurant(\\s|$)") ~ "restaurant",
+    str_detect(Incident.Area, "(^|\\s)restaurant(\\s|$)|(^|\\s)cafeteria(\\s|$)|(^|\\s)coffee(\\s|$)|(^|\\s)pub(\\s|$)") ~ "restaurant",
     str_detect(Incident.Area, "(^|\\s)river(\\s|$)|(^|\\s)forest(\\s|$)|(^|\\s)forests(\\s|$)|(^|\\s)campsite(\\s|$)") ~ "nature",
-    str_detect(Incident.Area, "(^|\\s)spa(\\s|$)") ~ "spa",
-    str_detect(Incident.Area, "(^|\\s)street(\\s|$)|(^|\\s)sidewalk(\\s|$)|(^|\\s)square(\\s|$)") ~ "street",
+    str_detect(Incident.Area, "(^|\\s)street(\\s|$)|(^|\\s)sidewalk(\\s|$)|(^|\\s)bridge(\\s|$)|(^|\\s)park(\\s|$)|(^|\\s)square(\\s|$)|(^|\\s)parking(\\s|$)") ~ "street",
     str_detect(Incident.Area, "(^|\\s)temple(\\s|$)|(^|\\s)monastery(\\s|$)|(^|\\s)church(\\s|$)") ~ "place of worship",
     str_detect(Incident.Area, "(^|\\s)township(\\s|$)") ~ "township",
-    str_detect(Incident.Area, "(^|\\s)university(\\s|$)") ~ "university",
-    str_detect(Incident.Area, "(^|\\s)wal-mart(\\s|$)") ~ "supermarket",
+    str_detect(Incident.Area, "(^|\\s)university(\\s|$)|(^|\\s)college(\\s|$)") ~ "university",
+    str_detect(Incident.Area, "(^|\\s)wal-mart(\\s|$)|(^|\\s)mall(\\s|$)|(^|\\s)grocery(\\s|$)") ~ "market",
     str_detect(Incident.Area, "(^|\\s)workplace(\\s|$)") ~ "company",
     TRUE ~ Incident.Area
   )
@@ -139,16 +131,13 @@ shootings <- shootings %>%
 
 # Specific tratments for non standard values
 # Using title and descriptions of the shootings
-nursing <- c("a nursing home")
-shootings <- shootings %>% mutate(Incident.Area = replace(Incident.Area, Incident.Area %in% nursing, "nursing home"))
+nursing <- c("a nursing home", "nursing home")
+shootings <- shootings %>% mutate(Incident.Area = replace(Incident.Area, Incident.Area %in% nursing, "hospital"))
 
 highSchools <- c("chardon high scool", "outside gym", "successtech academy")
 shootings <- shootings %>% mutate(Incident.Area = replace(Incident.Area, Incident.Area %in% highSchools, "high school"))
 
-schools <- c("los angeles computer school", "appalachian school of law")
-shootings <- shootings %>% mutate(Incident.Area = replace(Incident.Area, Incident.Area %in% schools, "school"))
-
-university <- c("dormitory", "nursing classroom", "school campus", "lecture hall")
+university <- c("dormitory", "nursing classroom", "school campus", "lecture hall", "los angeles computer school", "appalachian school of law")
 shootings <- shootings %>% mutate(Incident.Area = replace(Incident.Area, Incident.Area %in% university, "university"))
 
 driveBy <- c("along a highway", "outside of liquor store")
@@ -162,11 +151,8 @@ shootings <- shootings %>% mutate(Incident.Area = replace(Incident.Area, Inciden
 
 homes <- c("home in rural alabama", "outside the house", "backyard of a house", "in home")
 shootings <- shootings %>% mutate(Incident.Area = replace(Incident.Area, Incident.Area %in% homes, "home"))
-                                                          
-posts <- c("edmond, oklahoma")
-shootings <- shootings %>% mutate(Incident.Area = replace(Incident.Area, Incident.Area %in% posts, "post office"))
-
-laws <- c("county office building", "city hall building", "smith county courthouse")
+            
+laws <- c("county office building", "city hall building", "smith county courthouse", "edmond, oklahoma")
 shootings <- shootings %>% mutate(Incident.Area = replace(Incident.Area, Incident.Area %in% laws, "administrative building"))
 
 workpalces <- c(
@@ -192,7 +178,7 @@ restaurants <- c("chuck e. cheese")
 shootings <- shootings %>% mutate(Incident.Area = replace(Incident.Area, Incident.Area %in% restaurants, "restaurant"))
 
 supermakets <- c("cosmetics section of a macys department store")
-shootings <- shootings %>% mutate(Incident.Area = replace(Incident.Area, Incident.Area %in% supermakets, "supermarket"))
+shootings <- shootings %>% mutate(Incident.Area = replace(Incident.Area, Incident.Area %in% supermakets, "market"))
 
 millitaryFacilities <- c("fort hood army post", "military facilities")
 shootings <- shootings %>% mutate(Incident.Area = replace(Incident.Area, Incident.Area %in% millitaryFacilities, "millitary facility"))
@@ -202,18 +188,18 @@ shootings <- shootings %>% mutate(Incident.Area = replace(Incident.Area, Inciden
 
 shootings <- shootings %>% mutate(Incident.Area = replace(Incident.Area, Incident.Area == "crown", NA))
 
-shootings <- shootings %>% mutate(Incident.Area = replace(Incident.Area, Incident.Area == "interstate in hazelwood", "interstate"))
+shootings <- shootings %>% mutate(Incident.Area = replace(Incident.Area, Incident.Area == "interstate in hazelwood", "street"))
 
 # Fix des valeurs
 shootings$Incident.Area[shootings$Title == "Case Western Reserve University"] <- "university"
 shootings$Incident.Area[shootings$Title == "Westside Middle School killings"] <- "middle school"
-shootings$Incident.Area[shootings$Title == "Pennsylvania supermarket shooting"] <- "supermarket"
+shootings$Incident.Area[shootings$Title == "Pennsylvania supermarket shooting"] <- "market"
 shootings$Incident.Area[shootings$Title == "Pinellas Park High School"] <- "high school"
-shootings$Incident.Area[shootings$Title == "Nellis Plaza"] <- "cafe;supermaket"
-shootings$Incident.Area[shootings$Title == "Parkland Coffee Shop"] <- "cafe"
+shootings$Incident.Area[shootings$Title == "Nellis Plaza"] <- "restaurant;supermaket"
+shootings$Incident.Area[shootings$Title == "Parkland Coffee Shop"] <- "restaurant"
 shootings$Incident.Area[shootings$Title == "Marysville-Pilchuck High School"] <- "high school"
 shootings$Incident.Area[shootings$Title == "Youth With A Mission and New Life Church"] <- "association;place of whorship"
-shootings$Incident.Area[shootings$Title == "Dearborn Post Office"] <- "post office"
+shootings$Incident.Area[shootings$Title == "Dearborn Post Office"] <- "administrative building"
 shootings$Incident.Area[shootings$Title == "Offices of All-Tech Investment Group and Momentum Securities"] <- "home;company"
 shootings$Incident.Area[shootings$Title == "Planned Parenthood clinic"] <- "street"
 shootings$Incident.Area[shootings$Title == "Massachusetts Abortion Clinic"] <- "hospital"

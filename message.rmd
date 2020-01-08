@@ -1,0 +1,245 @@
+---
+title: "Analysis of mass shootings in the USA between 1966 and 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE) 
+
+Sys.setlocale("LC_TIME", "English")
+
+require(ggmap)
+require(tidyverse)
+require(ggplot2)
+require(lubridate)
+require(scales)
+require(usmap)
+require(grid)
+require(Rmisc)
+require(MASS)
+require(reshape2)
+
+rm(list = ls())
+
+shootings <- read_csv(file = "./US_Shootings_Cleaned.csv")
+
+## Differents quantitative variables and their meaning:
+
+## Fatalities: number of death caused by the shooting (including the shooter if applicable)
+## Injured: number of person injured by the shooting (including the shooter if applicable)
+## Total.victims: total number of injured or deaths caused by the shotings
+## Policeman.Killed total number of policeman who died from the shooting
+## Age/Age2: Age of the shooter/shooters at the moment of the incident
+
+shootings.quantitative <- data.frame(
+  Fatalities = shootings$Fatalities,
+  Injured = shootings$Injured,
+  Total.Victims = shootings$Total.victims,
+  Policeman.Killed = shootings$Policeman.Killed,
+  Age = shootings$Age,
+  Age2 = shootings$Age2
+)
+
+```
+
+## Graphs
+
+```{r fatalities}
+ggplot(stack(shootings.quantitative[,-c(5,6)]), aes(x = ind, y = values, fill = ind)) +
+  geom_boxplot() + scale_y_continuous(trans='pseudo_log')
+```
+
+On fait le graphique pour Age/Age2 séparéments car il y a plus de valeurs
+
+```{r AgeBoxplot}
+shootings.ages <- melt(data.frame(shootings.quantitative$Age, shootings.quantitative$Age2))
+shootings.ages$variable <- NULL
+colnames(shootings.ages) <- c("age")
+
+ggplot(stack(shootings.ages), aes(x = ind, y = values, fill = ind)) +
+  geom_boxplot() + scale_y_continuous(trans='pseudo_log')
+
+```
+
+## Statistiques sur le nombre de mort
+
+```{r fatalities}
+summary(shootings.quantitative$Fatalities)
+```
+
+
+```{r fatalitiesCI}
+CI(shootings.quantitative$Fatalities, ci=0.95)
+```
+
+
+```{r fatalitiesOutliers}
+fatalities_outliers <- boxplot.stats(shootings.quantitative$Fatalities)$out
+fatalities_outliers_row <- which(shootings.quantitative$Fatalities %in% c(fatalities_outliers))
+ 
+shootings[fatalities_outliers_row,]
+```
+
+# Distribution
+
+```{r fatalitiesDistib}
+shapiro.test(shootings.quantitative$Fatalities)
+```
+
+On peux assumer que la loi n'est pas normale car p-value < 0.05 
+
+```{r fatalitiesDistib}
+ggplot(shootings.quantitative, aes(x=shootings.quantitative$Fatalities)) +
+  geom_histogram(aes(y = ..density..), colour = "black", fill="darkorchid1") +
+  geom_density()
+
+```
+
+On remarque que la distribution ressemble à une loi exponentielle, pour le tester on va utiliser un test "goodness of fit"
+
+```{r fatalitiesExponential, echo=FALSE}
+
+fit <- fitdistr(shootings.quantitative$Fatalities, "exponential")
+ks.test(shootings.quantitative$Fatalities, "pexp", fit$estimate)
+
+```
+
+## Statistiques sur le nombre de blessés
+
+```{r injured}
+summary(shootings.quantitative$Injured)
+```
+
+
+```{r injuredCI}
+CI(shootings.quantitative$Injured, ci=0.95)
+```
+
+
+```{r injuredOutliers}
+injured_outliers <- boxplot.stats(shootings.quantitative$Injured)$out
+injured_outliers_row <- which(shootings.quantitative$Injured %in% c(injured_outliers))
+ 
+shootings[injured_outliers_row,]
+```
+
+# Distribution
+
+```{r injuredDistib}
+shapiro.test(shootings.quantitative$Injured)
+```
+
+On peux assumer que la loi n'est pas normale car p-value < 0.05 
+
+```{r injuredDistib}
+ggplot(shootings.quantitative, aes(x=Injured)) +
+  geom_histogram(aes(y = ..density..), colour = "black", fill="darkorchid1", binwidth = 8) +
+  geom_density()
+```
+
+On remarque que la distribution ressemble à une loi exponentielle, pour le tester on va utiliser un test "goodness of fit"
+
+```{r injuredExponential, echo=FALSE}
+fit <- fitdistr(shootings.quantitative$Injured, "exponential")
+ks.test(shootings.quantitative$Injured, "pexp", fit$estimate)
+```
+
+## Statistiques sur le nombre total de victimes
+
+```{r victims}
+summary(shootings.quantitative$Total.Victims)
+```
+
+
+```{r victimsCI}
+CI(shootings.quantitative$Total.Victims, ci=0.95)
+```
+
+
+```{r victimsOutliers}
+victims_outliers <- boxplot.stats(shootings.quantitative$Total.Victims)$out
+victims_outliers_row <- which(shootings.quantitative$Total.Victims %in% c(victims_outliers))
+shootings[victims_outliers_row,]
+```
+
+```{r victimsDistib}
+shapiro.test(shootings.quantitative$Total.Victims)
+```
+
+On peux assumer que la loi n'est pas normale car p-value <= 0.05 
+
+```{r victimsDistib}
+ggplot(shootings.quantitative, aes(x=Total.Victims)) +
+  geom_histogram(aes(y = ..density..), colour = "black", fill="darkorchid1") +
+  geom_density()
+```
+
+On remarque que la distribution ressemble à une loi exponentielle, pour le tester on va utiliser un test "goodness of fit"
+
+```{r victimsExponential, echo=FALSE}
+fit <- fitdistr(shootings.quantitative$Total.Victims, "exponential")
+ks.test(shootings.quantitative$Total.Victims, "pexp", fit$estimate)
+```
+
+## Statistiques sur le nombre de policier tués
+
+```{r policeman}
+summary(shootings.quantitative$Policeman.Killed)
+```
+
+
+```{r policemanCI}
+CI(shootings.quantitative$Policeman.Killed, ci=0.95)
+```
+
+
+```{r policemanOutliers}
+policemans_outliers <- boxplot.stats(shootings.quantitative$Policeman.Killed)$out
+policemans_outliers_row <- which(shootings.quantitative$Policeman.Killed %in% c(policemans_outliers))
+shootings[policemans_outliers_row,]
+```
+
+```{r policemanDistib}
+shapiro.test(shootings.quantitative$Policeman.Killed)
+```
+
+On peux assumer que la loi n'est pas normale car p-value <= 0.05 
+
+```{r policemanDistib}
+ggplot(shootings.quantitative, aes(x=Policeman.Killed)) +
+  geom_histogram(aes(y = ..density..), colour = "black", fill="darkorchid1") +
+  geom_density()
+```
+
+## Statistiques sur l'age
+
+```{r age}
+summary(shootings.ages$age)
+```
+
+
+```{r ageCI}
+CI(shootings.ages$age, ci=0.95)
+```
+
+
+```{r ageOutliers}
+ages_outliers <- boxplot.stats(shootings.ages$age)$out
+ages_outliers_row <- which(shootings.ages %in% c(ages_outliers))
+shootings[ages_outliers_row,]
+```
+
+Age n'a pas d'outliers
+
+```{r ageDistib}
+shapiro.test(shootings.ages$age)
+```
+
+On peux assumer que la loi n'est pas normale car p-value <= 0.05 
+
+```{r ageDistib}
+ggplot(shootings.ages, aes(x=age)) +
+  geom_histogram(aes(y = ..density..), colour = "black", fill="darkorchid1") +
+  geom_density()
+```
+
