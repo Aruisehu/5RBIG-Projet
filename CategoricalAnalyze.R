@@ -32,12 +32,12 @@ shootings <- read_csv(file = "./US_Shootings_Cleaned.csv")
 ## Gender study ##
 ##################
 
-shootings.Gender <- shootings %>% 
-  group_by(Gender) %>% 
-  count() %>% 
-  ungroup() %>% 
-  mutate(ShootingsPct=`n`/sum(`n`)) %>% 
-  mutate(Shootings=`n`) %>% 
+shootings.Gender <- shootings %>%
+  group_by(Gender) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(ShootingsPct=`n`/sum(`n`)) %>%
+  mutate(Shootings=`n`) %>%
   arrange(desc(Gender))
 shootings.Gender$Label <- scales::percent(shootings.Gender$ShootingsPct)
 
@@ -58,12 +58,12 @@ ggplot(shootings.Gender, aes(x="", y=ShootingsPct, fill=Gender))+
 ## Ethnicity study ##
 #####################
 
-shootings.Race <- shootings %>% 
-  group_by(Race) %>% 
-  count() %>% 
-  ungroup() %>% 
-  mutate(ShootingsPct=`n`/sum(`n`)) %>% 
-  mutate(Shootings=`n`) %>% 
+shootings.Race <- shootings %>%
+  group_by(Race) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(ShootingsPct=`n`/sum(`n`)) %>%
+  mutate(Shootings=`n`) %>%
   arrange(desc(Race))
 shootings.Race$Label <- scales::percent(shootings.Race$ShootingsPct)
 
@@ -73,17 +73,17 @@ uni_dist <- rep(1/nrow(shootings.Race), times=nrow(shootings.Race))
 
 shootings.Race.ChiTest <- chisq.test(shootings.Race$Shootings, p = uni_dist)
 
-ggplot(shootings.Race, 
+ggplot(shootings.Race,
        aes(x = reorder(Race, -ShootingsPct),
-           y = ShootingsPct)) + 
-  geom_bar(stat = "identity", 
-           fill = "lightblue", 
+           y = ShootingsPct)) +
+  geom_bar(stat = "identity",
+           fill = "lightblue",
            color = "black") +
-  geom_text(aes(label = Label), 
+  geom_text(aes(label = Label),
             hjust = -0.15) +
   scale_y_continuous(labels = percent) +
-  labs(x = "Race", 
-       y = "Percent", 
+  labs(x = "Race",
+       y = "Percent",
        title  = "US Shootings Frequencies By Ethnicity") +
   coord_flip()
 
@@ -91,12 +91,12 @@ ggplot(shootings.Race,
 ## Incident area study ##
 #########################
 
-shootings.IncidentArea <- shootings %>% 
-  group_by(Incident.Area) %>% 
-  count() %>% 
-  ungroup() %>% 
-  mutate(ShootingsPct=`n`/sum(`n`)) %>% 
-  mutate(Shootings=`n`) %>% 
+shootings.IncidentArea <- shootings %>%
+  group_by(Incident.Area) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(ShootingsPct=`n`/sum(`n`)) %>%
+  mutate(Shootings=`n`) %>%
   arrange(desc(Incident.Area))
 shootings.IncidentArea$Label <- scales::percent(shootings.IncidentArea$ShootingsPct)
 
@@ -106,17 +106,17 @@ uni_dist <- rep(1/nrow(shootings.IncidentArea), times=nrow(shootings.IncidentAre
 
 shootings.IncidentArea.ChiTest <- chisq.test(shootings.IncidentArea$Shootings, p = uni_dist)
 
-ggplot(shootings.IncidentArea, 
+ggplot(shootings.IncidentArea,
        aes(x = reorder(Incident.Area, -ShootingsPct),
-           y = ShootingsPct)) + 
-  geom_bar(stat = "identity", 
-           fill = "lightblue", 
+           y = ShootingsPct)) +
+  geom_bar(stat = "identity",
+           fill = "lightblue",
            color = "black") +
-  geom_text(aes(label = Label), 
+  geom_text(aes(label = Label),
             hjust = -0.15) +
   scale_y_continuous(labels = percent) +
-  labs(x = "Area of incident", 
-       y = "Percent", 
+  labs(x = "Area of incident",
+       y = "Percent",
        title  = "US Shootings Frequencies By Area of incident") +
   coord_flip()
 
@@ -125,12 +125,12 @@ ggplot(shootings.IncidentArea,
 ## Open Close study ##
 ######################
 
-shootings.OpenClose <- shootings %>% 
-  group_by(Open.Close.Location) %>% 
-  count() %>% 
-  ungroup() %>% 
-  mutate(ShootingsPct=`n`/sum(`n`)) %>% 
-  mutate(Shootings=`n`) %>% 
+shootings.OpenClose <- shootings %>%
+  group_by(Open.Close.Location) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(ShootingsPct=`n`/sum(`n`)) %>%
+  mutate(Shootings=`n`) %>%
   arrange(desc(Open.Close.Location))
 shootings.OpenClose$Label <- scales::percent(shootings.OpenClose$ShootingsPct)
 
@@ -151,12 +151,12 @@ ggplot(shootings.OpenClose, aes(x="", y=ShootingsPct, fill=Open.Close.Location))
 ## Target study ##
 ##################
 
-shootings.Target <- shootings %>% 
-  group_by(Target) %>% 
-  count() %>% 
-  ungroup() %>% 
-  mutate(ShootingsPct=`n`/sum(`n`)) %>% 
-  mutate(Shootings=`n`) %>% 
+shootings.Target <- shootings %>%
+  group_by(Target) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(ShootingsPct=`n`/sum(`n`)) %>%
+  mutate(Shootings=`n`) %>%
   arrange(desc(Target))
 shootings.Target$Label <- scales::percent(shootings.Target$ShootingsPct)
 
@@ -166,17 +166,17 @@ uni_dist <- rep(1/nrow(shootings.Target), times=nrow(shootings.Target))
 
 shootings.Target.ChiTest <- chisq.test(shootings.Target$Shootings, p = uni_dist)
 
-ggplot(shootings.Target, 
+ggplot(shootings.Target,
        aes(x = reorder(Target, -ShootingsPct),
-           y = ShootingsPct)) + 
-  geom_bar(stat = "identity", 
-           fill = "lightblue", 
+           y = ShootingsPct)) +
+  geom_bar(stat = "identity",
+           fill = "lightblue",
            color = "black") +
-  geom_text(aes(label = Label), 
+  geom_text(aes(label = Label),
             hjust = -0.15) +
   scale_y_continuous(labels = percent) +
-  labs(x = "Type of target", 
-       y = "Percent", 
+  labs(x = "Type of target",
+       y = "Percent",
        title  = "US Shootings Frequencies By Target") +
   coord_flip()
 
@@ -184,12 +184,12 @@ ggplot(shootings.Target,
 ## Cause study ##
 #################
 
-shootings.Cause <- shootings %>% 
-  group_by(Cause) %>% 
-  count() %>% 
-  ungroup() %>% 
-  mutate(ShootingsPct=`n`/sum(`n`)) %>% 
-  mutate(Shootings=`n`) %>% 
+shootings.Cause <- shootings %>%
+  group_by(Cause) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(ShootingsPct=`n`/sum(`n`)) %>%
+  mutate(Shootings=`n`) %>%
   arrange(desc(Cause))
 shootings.Cause$Label <- scales::percent(shootings.Cause$ShootingsPct)
 
@@ -199,17 +199,17 @@ uni_dist <- rep(1/nrow(shootings.Cause), times=nrow(shootings.Cause))
 
 shootings.Cause.ChiTest <- chisq.test(shootings.Cause$Shootings, p = uni_dist)
 
-ggplot(shootings.Cause, 
+ggplot(shootings.Cause,
        aes(x = reorder(Cause, -ShootingsPct),
-           y = ShootingsPct)) + 
-  geom_bar(stat = "identity", 
-           fill = "lightblue", 
+           y = ShootingsPct)) +
+  geom_bar(stat = "identity",
+           fill = "lightblue",
            color = "black") +
-  geom_text(aes(label = Label), 
+  geom_text(aes(label = Label),
             hjust = -0.15) +
   scale_y_continuous(labels = percent) +
-  labs(x = "Cause", 
-       y = "Percent", 
+  labs(x = "Cause",
+       y = "Percent",
        title  = "US Shootings Frequencies By Cause") +
   coord_flip()
 
@@ -217,12 +217,12 @@ ggplot(shootings.Cause,
 ## Weapon Type study ##
 #######################
 
-shootings.WeaponType <- shootings %>% 
-  group_by(Weapon.Type) %>% 
-  count() %>% 
-  ungroup() %>% 
-  mutate(ShootingsPct=`n`/sum(`n`)) %>% 
-  mutate(Shootings=`n`) %>% 
+shootings.WeaponType <- shootings %>%
+  group_by(Weapon.Type) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(ShootingsPct=`n`/sum(`n`)) %>%
+  mutate(Shootings=`n`) %>%
   arrange(desc(Weapon.Type))
 shootings.WeaponType$Label <- scales::percent(shootings.WeaponType$ShootingsPct)
 
@@ -233,17 +233,17 @@ uni_dist <- rep(1/nrow(shootings.WeaponType), times=nrow(shootings.WeaponType))
 shootings.WeaponType.ChiTest <- chisq.test(shootings.WeaponType$Shootings, p = uni_dist)
 
 
-ggplot(shootings.WeaponType, 
+ggplot(shootings.WeaponType,
        aes(x = reorder(Weapon.Type, -ShootingsPct),
-           y = ShootingsPct)) + 
-  geom_bar(stat = "identity", 
-           fill = "lightblue", 
+           y = ShootingsPct)) +
+  geom_bar(stat = "identity",
+           fill = "lightblue",
            color = "black") +
-  geom_text(aes(label = Label), 
+  geom_text(aes(label = Label),
             hjust = -0.15) +
   scale_y_continuous(labels = percent) +
-  labs(x = "Type of weapon", 
-       y = "Percent", 
+  labs(x = "Type of weapon",
+       y = "Percent",
        title  = "US Shootings Frequencies By Weapon Type") +
   coord_flip()
 
@@ -251,12 +251,12 @@ ggplot(shootings.WeaponType,
 ## Mental Health Issues study ##
 ################################
 
-shootings.MentalHealthIssues <- shootings %>% 
-  group_by(Mental.Health.Issues) %>% 
-  count() %>% 
-  ungroup() %>% 
-  mutate(ShootingsPct=`n`/sum(`n`)) %>% 
-  mutate(Shootings=`n`) %>% 
+shootings.MentalHealthIssues <- shootings %>%
+  group_by(Mental.Health.Issues) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(ShootingsPct=`n`/sum(`n`)) %>%
+  mutate(Shootings=`n`) %>%
   arrange(desc(Mental.Health.Issues))
 shootings.MentalHealthIssues$Label <- scales::percent(shootings.MentalHealthIssues$ShootingsPct)
 
@@ -266,17 +266,17 @@ uni_dist <- rep(1/nrow(shootings.MentalHealthIssues), times=nrow(shootings.Menta
 
 shootings.MentalHealthIssues.ChiTest <- chisq.test(shootings.MentalHealthIssues$Shootings, p = uni_dist)
 
-ggplot(shootings.MentalHealthIssues, 
+ggplot(shootings.MentalHealthIssues,
        aes(x = reorder(Mental.Health.Issues, -ShootingsPct),
-           y = ShootingsPct)) + 
-  geom_bar(stat = "identity", 
-           fill = "lightblue", 
+           y = ShootingsPct)) +
+  geom_bar(stat = "identity",
+           fill = "lightblue",
            color = "black") +
-  geom_text(aes(label = Label), 
+  geom_text(aes(label = Label),
             hjust = -0.15) +
   scale_y_continuous(labels = percent) +
-  labs(x = "Mental disease", 
-       y = "Percent", 
+  labs(x = "Mental disease",
+       y = "Percent",
        title  = "US Shootings Frequencies By mental disease") +
   coord_flip()
 
@@ -284,12 +284,12 @@ ggplot(shootings.MentalHealthIssues,
 ## Ten Casualities Min study ##
 ###############################
 
-shootings.TenCasualitiesMin <- shootings %>% 
-  group_by(Ten.Casualities.Min) %>% 
-  count() %>% 
-  ungroup() %>% 
-  mutate(ShootingsPct=`n`/sum(`n`)) %>% 
-  mutate(Shootings=`n`) %>% 
+shootings.TenCasualitiesMin <- shootings %>%
+  group_by(Ten.Casualities.Min) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(ShootingsPct=`n`/sum(`n`)) %>%
+  mutate(Shootings=`n`) %>%
   arrange(desc(Ten.Casualities.Min))
 shootings.TenCasualitiesMin$Label <- scales::percent(shootings.TenCasualitiesMin$ShootingsPct)
 
@@ -309,16 +309,16 @@ ggplot(shootings.TenCasualitiesMin, aes(x="", y=ShootingsPct, fill=Ten.Casualiti
 #################
 ## State study ##
 #################
- 
-shootings.State <- shootings %>% 
+
+shootings.State <- shootings %>%
   group_by(State) %>%
   count() %>%
   ungroup() %>%
-  mutate(ShootingsPct=`n`/sum(`n`)) %>% 
+  mutate(ShootingsPct=`n`/sum(`n`)) %>%
   mutate(Shootings=`n`) %>%
   arrange(desc(State))
 
-shootings.State.TV <- shootings %>% 
+shootings.State.TV <- shootings %>%
   group_by(State) %>%
   summarise(Total.victims = sum(Total.victims)) %>%
   arrange(desc(State))
@@ -332,14 +332,14 @@ shootings.State.ChiTest <- chisq.test(shootings.State$Shootings, p = uni_dist)
 shootings.State$state <- shootings.State$State
 shootings.State.TV$state <- shootings.State.TV$State
 
-plot_usmap(data = shootings.State, values = "n", color = "black") + 
-  scale_fill_continuous(low = "lightgoldenrodyellow", high = "red", name = "Shootings", label = scales::comma) + 
+plot_usmap(data = shootings.State, values = "n", color = "black") +
+  scale_fill_continuous(low = "lightgoldenrodyellow", high = "red", name = "Shootings", label = scales::comma) +
   theme(legend.position = "right") +
   ggtitle("US Shootings By State")
 
-plot_usmap(data = shootings.State.TV, values = "Total.victims", color = "black") + 
-  scale_fill_continuous(low = "lightgoldenrodyellow", high = "red", name = "Victims", label = scales::comma) + 
+plot_usmap(data = shootings.State.TV, values = "Total.victims", color = "black") +
+  scale_fill_continuous(low = "lightgoldenrodyellow", high = "red", name = "Victims", label = scales::comma) +
   theme(legend.position = "right") +
   ggtitle("# of victims in Shootings in the US By State")
 
-qmplot(Longitude, Latitude, data = shootings, maptype = "toner-lite", color = State)
+# qmplot(Longitude, Latitude, data = shootings, maptype = "toner-lite", color = State)
