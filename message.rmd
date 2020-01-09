@@ -1,6 +1,8 @@
 ---
 title: "Analysis of mass shootings in the USA between 1966 and 2017"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE, echo=FALSE}
@@ -30,6 +32,10 @@ shootings <- read_csv(file = "./US_Shootings_Cleaned.csv", na = c("unknown", "op
 ## Total.victims: total number of injured or deaths caused by the shotings
 ## Policeman.Killed total number of policeman who died from the shooting
 ## Age/Age2: Age of the shooter/shooters at the moment of the incident
+shootings$Age <- as.numeric(shootings$Age)
+shootings$Age2 <- as.numeric(shootings$Age2)
+shootings$Policeman.Killed <- as.numeric(shootings$Policeman.Killed)
+shootings$AverageAge <- as.numeric(shootings$AverageAge)
 
 shootings.quantitative <- data.frame(
   Fatalities = shootings$Fatalities,
@@ -40,13 +46,6 @@ shootings.quantitative <- data.frame(
   Age2 = shootings$Age2
 )
 
-
-shootings$Age <- as.numeric(shootings$Age)
-shootings$Age2 <- as.numeric(shootings$Age2)
-shootings$Policeman.Killed <- as.numeric(shootings$Policeman.Killed)
-shootings$AverageAge <- as.numeric(shootings$AverageAge)
-
-
 shootings.ages <- melt(data.frame(shootings.quantitative$Age, shootings.quantitative$Age2))
 shootings.ages$variable <- NULL
 colnames(shootings.ages) <- c("age")
@@ -55,7 +54,11 @@ shootings.ages$age <- as.numeric(shootings.ages$age)
 
 ## Introduction
 
-Ce document est une présentation de plusieurs 
+Ce document est une présentation de plusieurs analyses faites sur un jeu de données présentant les fusillades de masses de 1966 à 2017.
+Aucune conclusion définitive ne pourra être tirer de ces analyses car le jeu de données ne compte qu'un nombre limité de variables
+et que d'autres variables non présentes peuvent influer sur les corrélations relevées.
+
+Cependant ce document exposent des pistes d'études relevantes à explorer pour mieux comprendre les causes des fusillades.
 
 ## Graphes
 
@@ -195,12 +198,12 @@ ks.test(shootings.quantitative$Total.Victims, "pexp", fit$estimate)
 ## Statistiques sur le nombre de policier tués
 
 ```{r policeman}
-summary(as.numeric(shootings.quantitative$Policeman.Killed))
+summary(shootings.quantitative$Policeman.Killed)
 ```
 
 
 ```{r policemanCI}
-CI(as.numeric(shootings.quantitative$Policeman.Killed, ci=0.95))
+CI(shootings.quantitative$Policeman.Killed, ci=0.95)
 ```
 
 
@@ -436,7 +439,6 @@ data <- data  %>%
   dplyr::summarise(n = sum(value)) %>%
   dplyr::mutate(percentage = n / sum(n))
 
-View(data)
 ggplot(data, aes(x=Year, y = percentage, fill = variable)) +
   geom_area(color = "black")
 ```
@@ -449,7 +451,7 @@ summary(victims.regression.linear)
 
 Une régression linéaire n'est pas satisfaisante
 
-```{r victimsPredictions}
+```{r victimsPredictionsExp}
 victims.regression.exp <- lm(log(Total.victims) ~ Year, data=shootings.by.year)
 
 summary(victims.regression.exp)
@@ -478,7 +480,7 @@ summary(victims.regression.linear.2010)
 
 Une régression linéaire n'est pas satisfaisante
 
-```{r 2010victimsPredictions}
+```{r 2010victimsPredictionsExp}
 victims.regression.exp.2010 <- lm(log(Total.victims) ~ Year, data=shootings.by.year.2010)
 
 summary(victims.regression.exp.2010)
@@ -526,30 +528,102 @@ qmplot(Longitude, Latitude, data = shootings, maptype = "toner-lite", color = "r
 5
 
 ```{r MapKmeansCluster}
-shootings.TotalVictims <- shootings[rep(seq_len(dim(shootings)[1]), shootings$Total.victims), 1:25]
 
-clusters <- kmeans(shootings.TotalVictims[c('Latitude', 'Longitude')], 6)
+shootings_bis <- shootings
+
+clusters <- kmeans(shootings_bis[c('Latitude', 'Longitude', 'Total.victims')], 5)
 
 # Save the cluster number in the dataset as column
-shootings.TotalVictims$Clusters <- as.factor(clusters$cluster)
+shootings_bis$Clusters <- as.factor(clusters$cluster)
 
-qmplot(Longitude, Latitude, data = shootings.TotalVictims, maptype = "terrain-background", color = Clusters) +
+qmplot(Longitude, Latitude, data = shootings_bis, maptype = "terrain-background", color = Clusters) +
   labs(title = "K Means clustering Visualition of mass shootings in the US\n", x = "", y = "", color = "Clusters") +
-  scale_color_manual(labels = c("North Central US", "Rockies", "South East Coast", "North East Coast", "South Central US", "West Coast"),
+  scale_color_manual(labels = c("1", "2", "3", "4", "5", "6"),
                      values =  c("red", "chocolate", "green", "blue", "yellow", "deeppink"))
 
 ```
 
 6
 ```{r MapHierarchicalCluster}
-hierachical.cluster <- hclust(dist(shootings.TotalVictims[c('Latitude', 'Longitude')]))
-plot(hierachical.cluster)
-cut_cluster <- cutree(hierachical.cluster, k = 7)
+hierachical.cluster <- hclust(dist(shootings[c('Latitude', 'Longitude', 'Total.victims')]))
+cut_cluster <- cutree(hierachical.cluster, k = 6)
 
-shootings.TotalVictims$HierarchicalClusters <- as.factor(cut_cluster)
+shootings_bis$HierarchicalClusters <- as.factor(cut_cluster)
 
-qmplot(Longitude, Latitude, data = shootings.TotalVictims, maptype = "terrain-background", color = HierarchicalClusters) +
+qmplot(Longitude, Latitude, data = shootings_bis, maptype = "terrain-background", color = HierarchicalClusters) +
   labs(title = "Hierarchical clustering Visualition of mass shootings in the US\n", x = "", y = "", color = "Clusters") +
-  scale_color_manual(labels = c("South / South East US", "Rockies", "North East Coast", "West Coast", "US Central", "Hawaii", "Alaska"),
-                     values =  c("red", "chocolate", "green", "blue", "yellow", "deeppink", "turquoise2"))
+  scale_color_manual(labels = c("1", "2", "3", "4", "5", "6"),
+                     values =  c("red", "chocolate", "green", "blue", "yellow", "deeppink"))
+```
+
+7
+
+```{r GunLicenseData, echo=FALSE}
+gun_license <- read_csv(file="US_License_Cleaned.csv")
+
+gun_license <- gun_license[-which(is.na(gun_license$State)),]
+shootings.State <- shootings %>%
+  dplyr::group_by(State) %>%
+  dplyr::count() %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(ShootingsPct=`n`/sum(`n`)) %>%
+  dplyr::mutate(Shootings=`n`) %>%
+  dplyr::arrange(desc(State))
+
+gun_license.State <- gun_license %>%
+  dplyr::group_by(State) %>%
+  dplyr::count() %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(ShopsPct=`n`/sum(`n`)) %>%
+  dplyr::mutate(Shops=`n`) %>%
+  dplyr::arrange(desc(State))
+
+Data <- merge(shootings.State[,-2], gun_license.State[,-2],by=c("State"))
+
+```
+
+```{r GunLicenseMap}
+ggmap(get_stamenmap(bbox = c(left = -170, bottom = 24, right = -50, top = 70), zoom = 4,
+        color = "color",
+        maptype = "toner-lite", force = FALSE
+)) + geom_point(aes(x = Longitude, y = Latitude), color = "lightblue3", data = gun_license, size = 0.01, alpha = 0.1) + 
+  theme(legend.position="bottom")
+```
+
+```{r GunLicenceCor}
+cor(Data$ShootingsPct, Data$ShopsPct)
+
+```
+
+```{r GunLicenseRel}
+rel <- lm(ShootingsPct ~ ShopsPct, data = Data)
+summary(rel)
+```
+
+```{r GunLicenseRelPlot}
+Data %>%
+  mutate( model = predict(rel)) %>%
+  ggplot(x = ShopsPct) +
+  geom_point( aes(ShopsPct, ShootingsPct) ) +
+  geom_line( aes(ShopsPct, model, colour="linear")) +
+  scale_colour_manual(name = 'Regressions', values =c('linear'='orange'))
+```
+
+8
+
+```{r EpicMap}
+shootings.State.data <- shootings %>%
+  dplyr::group_by(State) %>%
+  dplyr::count() %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(ShootingsPct=`n`/sum(`n`)) %>%
+  dplyr::mutate(Shootings=`n`) %>%
+ dplyr:: arrange(desc(State))
+
+shootings.State.data$state <- shootings.State.data$State
+
+plot_usmap(data = shootings.State.data, values = "n", color = "black") +
+  scale_fill_continuous(low = "lightgoldenrodyellow", high = "red", name = "Shootings", label = scales::comma) +
+  theme(legend.position = "right") +
+  ggtitle("US Shootings By State")
 ```

@@ -1,4 +1,6 @@
 Sys.setlocale("LC_TIME", "English")
+Sys.setlocale("LC_ALL", "English")
+
 
 require(ggmap)
 require(tidyverse)
@@ -10,9 +12,9 @@ require(grid)
 
 rm(list = ls())
 
-gun_license <- read_csv(file="US_License_Cleaned.csv")
-
 shootings <- read_csv(file="US_Shootings_Cleaned.csv")
+
+gun_license <- read_csv(file="US_License_Cleaned.csv")
 
 gun_license <- gun_license[-which(is.na(gun_license$State)),]
 
@@ -36,8 +38,6 @@ Data <- merge(shootings.State[,-2], gun_license.State[,-2],by=c("State"))
 
 cor(Data$ShootingsPct, Data$ShopsPct)
 rel <- lm(ShootingsPct ~ ShopsPct, data = Data)
-
-plot(Data$ShootingsPct, Data$ShopsPct)
 
 qmplot(Longitude, Latitude, data = gun_license, maptype = "toner-background", zoom = 4,
        colour = I("yellow"), alpha = I(0.4), size = I(0.01))
