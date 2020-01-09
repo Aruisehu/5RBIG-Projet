@@ -1,8 +1,8 @@
 ---
 title: "Analysis of mass shootings in the USA between 1966 and 2017"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE, echo=FALSE}
@@ -59,9 +59,148 @@ et que d'autres variables non présentes peuvent influer sur les corrélations r
 
 Cependant ce document exposent des pistes d'études relevantes à explorer pour mieux comprendre les causes des fusillades.
 
-## Graphes
+## 2) Etude des variables qualitatives
 
-## 3. Study of quantitative variables
+### Genre: Analyse Individuelle
+
+```{r GenderData, echo=FALSE}
+shootings.Gender <- shootings %>%
+  dplyr::group_by(Gender) %>%
+  dplyr::count() %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(ShootingsPct=`n`/sum(`n`)) %>%
+  dplyr::mutate(Shootings=`n`) %>%
+  dplyr::arrange(desc(Gender))
+shootings.Gender$Label <- scales::percent(shootings.Gender$ShootingsPct)
+
+# Chi Squared test of goodness fit to a uniform distribution
+
+uni_dist <- rep(1/nrow(shootings.Gender), times=nrow(shootings.Gender))
+
+shootings.Gender.ChiTest <- chisq.test(shootings.Gender$Shootings, p = uni_dist)
+```
+
+#### Proportions et fréquences
+
+```{r GenderProportions}
+head(shootings.Gender)
+```
+
+Nous voyons que les hommes sont à l'origine de la quasi totalité des fusillades présentes dans ce jeu de données.
+
+#### Diagramme circulaire
+
+```{r GenderPieChart}
+ggplot(shootings.Gender, aes(x="", y=ShootingsPct, fill=Gender))+
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start=0) +
+  theme(axis.text.x=element_blank()) +
+  geom_text(aes(x=1, y = cumsum(ShootingsPct) - ShootingsPct/3, label=Label)) +
+  ggtitle("US Shootings Frequencies By Gender")
+```
+
+### Test de chiralité de qualité d'ajustement
+
+Pour le test suivant, nous avons voulu savoir si la distribution des fusillades était uniforme selon le genre.
+```{r GenderChiSquared}
+shootings.Gender.ChiTest
+```
+
+La p-value donnée par ce test est bien inférieure à 0.05, notre seuil d'erreur. Donc nous rejetons l'hypothèse que la distribution des 
+fusillades par genre est uniforme.
+
+### Cause: Analyse Individuelle
+
+```{r CauseData, echo=FALSE}
+shootings.Cause <- shootings %>%
+  dplyr::group_by(Cause) %>%
+  dplyr::count() %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(ShootingsPct=`n`/sum(`n`)) %>%
+  dplyr::mutate(Shootings=`n`) %>%
+  dplyr::arrange(desc(Cause))
+shootings.Cause$Label <- scales::percent(shootings.Cause$ShootingsPct)
+
+# Chi Squared test of goodness fit to a uniform distribution
+
+uni_dist <- rep(1/nrow(shootings.Cause), times=nrow(shootings.Cause))
+
+shootings.Cause.ChiTest <- chisq.test(shootings.Cause$Shootings, p = uni_dist)
+
+```
+
+#### Proportions et fréquences
+
+```{r CauseProportions}
+head(shootings.Cause[order(shootings.Cause$ShootingsPct, decreasing = TRUE),])
+```
+
+Nous voyons que la première raison connue de commencer une fusillade est un trouble mental.
+
+#### Diagramme en batons
+
+```{r CauseBarChart}
+ggplot(shootings.Cause,
+       aes(x = reorder(Cause, -ShootingsPct),
+           y = ShootingsPct)) +
+  geom_bar(stat = "identity",
+           fill = "lightblue",
+           color = "black") +
+  geom_text(aes(label = Label),
+            hjust = -0.15) +
+  scale_y_continuous(labels = percent) +
+  labs(x = "Cause",
+       y = "Percent",
+       title  = "US Shootings Frequencies By Cause") +
+  coord_flip()
+```
+
+### Test de chiralité de qualité d'ajustement
+
+Pour le test suivant, nous avons voulu savoir si la distribution des fusillades était uniforme selon la cause.
+```{r CauseChiSquared}
+shootings.Cause.ChiTest
+```
+
+La p-value donnée par ce test est bien inférieure à 0.05, notre seuil d'erreur. Donc nous rejetons l'hypothèse que la distribution des 
+fusillades par genre est uniforme.
+
+### Cause et genre: analyse
+
+```{r CauseGender}
+shootings.CauseGender <- shootings %>% 
+  dplyr::group_by(.dots=c("Cause","Gender")) %>% 
+  dplyr::count() %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(ShootingsPct=`n`/sum(`n`)) %>% 
+  dplyr::mutate(Shootings=`n`)
+shootings.CauseGender$Label <- scales::percent(shootings.CauseGender$ShootingsPct)
+
+# Chi Squared test of goodness fit to a uniform distribution
+
+shootings.CauseGender.ChiTest <- chisq.test(table(shootings$Cause, shootings$Gender))
+```
+
+#### Graphique
+
+```{r GenderCauseGraph}
+ggplot(shootings.CauseGender, aes(x=reorder(Cause, -ShootingsPct), y=ShootingsPct, fill=Cause))+
+  geom_bar(width = 1, stat = "identity") +
+  theme(axis.text.x=element_blank()) +
+  ggtitle("US Shootings Frequencies By Gender and Cause") +
+  facet_wrap(~Gender)
+```
+
+#### Test de chiralité d'indépendance
+
+```{r GenderCauseIndependence}
+shootings.CauseGender.ChiTest
+```
+
+Le test de chiralité si dessus semble valider l'indépendance entre le genre de la personne. Cependant la non normalité des données
+et le fort manque de données pour les femmes peuvent biaiser ce test.
+
+## 3) Etude des variables quantitatives
 
 ### 3.1)
 
@@ -598,21 +737,22 @@ On remarque que certaines prédictions semble réaliste et d'autrs comme l'expon
 
 Le modèles exponentiel semble mieux convenir pour la partie [1966;2017] alors que le modèle linéaire convient mieux à la partie [2010; 2017]
 
-## 4
 
-```{r MapScatterplot1}
+## 4) Scatterplot des fusillades
+
+```{r MapScatterplot1, message=FALSE}
 qmplot(Longitude, Latitude, data = shootings, maptype = "toner-lite", color = "red", size = I(1)) +
   labs(title = "Shootings' Location\n", x = "", y = "", color = "Legend") +
   scale_color_manual(labels = c("Shootings"), values = c("red"))
 ```
 
-## 5
+## 5) Carte des fusillades regroupés en KMeans cluster 
 
-```{r MapKmeansCluster}
+```{r MapKmeansCluster, message=FALSE}
 
 shootings_bis <- shootings
 
-clusters <- kmeans(shootings_bis[c('Latitude', 'Longitude', 'Total.victims')], 5)
+clusters <- kmeans(shootings_bis[c('Latitude', 'Longitude', 'Total.victims')], 6)
 
 # Save the cluster number in the dataset as column
 shootings_bis$Clusters <- as.factor(clusters$cluster)
@@ -624,8 +764,12 @@ qmplot(Longitude, Latitude, data = shootings_bis, maptype = "terrain-background"
 
 ```
 
-## 6
-```{r MapHierarchicalCluster}
+
+Le nombre de cluster "optimal" pour cette méthode a été obtenu de manière empirique
+
+## 6) Carte des fusillades regroupés hiérarchiquement 
+
+```{r MapHierarchicalCluster, message=FALSE}
 hierachical.cluster <- hclust(dist(shootings[c('Latitude', 'Longitude', 'Total.victims')]))
 cut_cluster <- cutree(hierachical.cluster, k = 6)
 
@@ -637,9 +781,24 @@ qmplot(Longitude, Latitude, data = shootings_bis, maptype = "terrain-background"
                      values =  c("red", "chocolate", "green", "blue", "yellow", "deeppink"))
 ```
 
-## 7
+Le nombre de cluster "optimal" pour cette méthode a été obtenu en visualisant le dendrogramme des regroupements hiérarchiques et en essayant
+de prendre des groupes ayant des données suffisament proches.
 
-```{r GunLicenseData, echo=FALSE}
+## 7) Comparaison avec d'autres jeu de données
+
+Pour cette partie, nous avons décidé de recouper les données des fusillades de masses avec des données gouvernementales permettant de savoir
+où ont été décerné les licences pour vendre les armes en janvier 2017 (donc où se trouvent les points de ventes d'armes aux USA).
+
+Source des données: (Gouvernement Fédéral des Etats Unis)[https://www.atf.gov/firearms/listing-federal-firearms-licensees-ffls-2017]
+
+Ce choix se justifie par le raisonnement suivant, plus il y a d'armuriers, plus l'offre d'armes est élevé et donc surement la demande. Donc
+Les populations locales ont probablement plus d'armes que dans les endroits où il y a moins d'armuriers.
+Plus il y a d'armes en circulation, plus les chances de fusillades sont, potentiellement élevé.
+
+Donc ce que nous souhaiterions mettre en évidence est un lien, une corrélation entre le nombre de fusillades dans un état et le nombre 
+de license pour vendre des armes situé dans cet état.
+
+```{r GunLicenseData, echo=FALSE, message=FALSE}
 gun_license <- read_csv(file="US_License_Cleaned.csv")
 
 gun_license <- gun_license[-which(is.na(gun_license$State)),]
@@ -663,7 +822,7 @@ Data <- merge(shootings.State[,-2], gun_license.State[,-2],by=c("State"))
 
 ```
 
-```{r GunLicenseMap}
+```{r GunLicenseMap, message=FALSE}
 ggmap(get_stamenmap(bbox = c(left = -170, bottom = 24, right = -50, top = 70), zoom = 4,
         color = "color",
         maptype = "toner-lite", force = FALSE
@@ -675,6 +834,9 @@ ggmap(get_stamenmap(bbox = c(left = -170, bottom = 24, right = -50, top = 70), z
 cor(Data$ShootingsPct, Data$ShopsPct)
 
 ```
+
+Le résultat précédent permet de voir que le pourcentage de fusillade par état et de magasins d'armes semble corrélé. Pour modéliser cette
+corrélation nous utilisons une regression linéaire.
 
 ```{r GunLicenseRel}
 rel <- lm(ShootingsPct ~ ShopsPct, data = Data)
@@ -690,18 +852,15 @@ Data %>%
   scale_colour_manual(name = 'Regressions', values =c('linear'='orange'))
 ```
 
-```{r EpicMap}
-shootings.State.data <- shootings %>%
-  dplyr::group_by(State) %>%
-  dplyr::count() %>%
-  dplyr::ungroup() %>%
-  dplyr::mutate(ShootingsPct=`n`/sum(`n`)) %>%
-  dplyr::mutate(Shootings=`n`) %>%
- dplyr:: arrange(desc(State))
 
-shootings.State.data$state <- shootings.State.data$State
+Comme le montre le graphique et le résumé de la régression linéaire, le modèle de données correspond de manière satisfaisante aux données réelles.
 
-plot_usmap(data = shootings.State.data, values = "n", color = "black") +
+## 8) Carte des incidents par état (BONUS)
+
+```{r EpicMap, message=FALSE}
+shootings.State$state <- shootings.State$State
+
+plot_usmap(data = shootings.State, values = "n", color = "black") +
   scale_fill_continuous(low = "lightgoldenrodyellow", high = "red", name = "Shootings", label = scales::comma) +
   theme(legend.position = "right") +
   ggtitle("US Shootings By State")

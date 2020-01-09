@@ -40,11 +40,11 @@ ggplot(shootings.GenderRace, aes(x=reorder(Race, -ShootingsPct), y=ShootingsPct,
 ###############################
 
 shootings.CauseIncidentArea <- shootings %>% 
-  group_by(.dots=c("Cause","Incident.Area")) %>% 
-  count() %>% 
-  ungroup() %>% 
-  mutate(ShootingsPct=`n`/sum(`n`)) %>% 
-  mutate(Shootings=`n`)
+  dplyr::group_by(.dots=c("Cause","Incident.Area")) %>% 
+  dplyr::count() %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(ShootingsPct=`n`/sum(`n`)) %>% 
+  dplyr::mutate(Shootings=`n`)
 shootings.CauseIncidentArea$Label <- scales::percent(shootings.CauseIncidentArea$ShootingsPct)
 
 # Chi Squared test of goodness fit to a uniform distribution
@@ -78,3 +78,27 @@ ggplot(shootings.TargetRace, aes(x=reorder(Target, -ShootingsPct), y=ShootingsPc
   theme(axis.text.x=element_blank()) +
   ggtitle("US Shootings Frequencies By Target and Ethnicities") +
   facet_wrap(~Race)
+
+
+
+
+
+
+
+shootings.CauseGender <- shootings %>% 
+  dplyr::group_by(.dots=c("Cause","Gender")) %>% 
+  dplyr::count() %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(ShootingsPct=`n`/sum(`n`)) %>% 
+  dplyr::mutate(Shootings=`n`)
+shootings.CauseGender$Label <- scales::percent(shootings.CauseGender$ShootingsPct)
+
+# Chi Squared test of goodness fit to a uniform distribution
+
+shootings.CauseGender.ChiTest <- chisq.test(table(shootings$Cause, shootings$Gender))
+
+ggplot(shootings.CauseGender, aes(x=reorder(Cause, -ShootingsPct), y=ShootingsPct, fill=Cause))+
+  geom_bar(width = 1, stat = "identity") +
+  theme(axis.text.x=element_blank()) +
+  ggtitle("US Shootings Frequencies By Gender and Cause") +
+  facet_wrap(~Gender)
