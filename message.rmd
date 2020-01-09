@@ -1,8 +1,8 @@
 ---
 title: "Analysis of mass shootings in the USA between 1966 and 2017"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE, echo=FALSE}
@@ -23,7 +23,7 @@ require(reshape2)
 
 rm(list = ls())
 
-shootings <- read_csv(file = "./US_Shootings_Cleaned.csv", na = c("unknown", "open;close"))
+shootings <- read_csv(file = "./US_Shootings_Cleaned.csv", na = c("unknown", "open;close", "NA"))
 
 ## Differents quantitative variables and their meaning:
 
@@ -42,11 +42,10 @@ shootings.quantitative <- data.frame(
   Injured = shootings$Injured,
   Total.Victims = shootings$Total.victims,
   Policeman.Killed = shootings$Policeman.Killed,
-  Age = shootings$Age,
-  Age2 = shootings$Age2
+  AverageAge = shootings$AverageAge
 )
 
-shootings.ages <- melt(data.frame(shootings.quantitative$Age, shootings.quantitative$Age2))
+shootings.ages <- melt(data.frame(shootings$Age, shootings$Age2))
 shootings.ages$variable <- NULL
 colnames(shootings.ages) <- c("age")
 shootings.ages$age <- as.numeric(shootings.ages$age)
@@ -62,25 +61,31 @@ Cependant ce document exposent des pistes d'études relevantes à explorer pour 
 
 ## Graphes
 
+## 3. Study of quantitative variables
+
+### 3.1)
+
+#### Boxplots
+
 ```{r fatalities}
 ggplot(stack(shootings.quantitative[,-c(5,6)]), aes(x = ind, y = values, fill = ind)) +
-  geom_boxplot() + scale_y_continuous(trans='pseudo_log')
+  geom_boxplot() + scale_y_continuous(trans='pseudo_log') +
+  ggtitle("Répartition des variables quantitatives :", "Fatalities, Injured, Total victims, Policeman Killed")
 ```
 
-On fait le graphique pour Age/Age2 séparéments car il y a plus de valeurs
+Le boxplot pour l'age est fait séparément :
 
 ```{r AgeBoxplot}
 ggplot(stack(shootings.ages), aes(x = ind, y = values, fill = ind)) +
-  geom_boxplot() + scale_y_continuous(trans='pseudo_log')
-
+  geom_boxplot() + scale_y_continuous(trans='pseudo_log') +
+  ggtitle("Répartition de l'age des tireurs")
 ```
 
-## Statistiques sur le nombre de mort
+#### Nombre de mort
 
 ```{r fatalitieSummary}
 summary(shootings.quantitative$Fatalities)
 ```
-
 
 ```{r fatalitiesCI}
 CI(shootings.quantitative$Fatalities, ci=0.95)
@@ -94,19 +99,18 @@ fatalities_outliers_row <- which(shootings.quantitative$Fatalities %in% c(fatali
 shootings[fatalities_outliers_row,]
 ```
 
-# Distribution
-
 ```{r fatalitiesDistibTest}
 shapiro.test(shootings.quantitative$Fatalities)
 ```
 
-On peux assumer que la loi n'est pas normale car p-value < 0.05 
+On peux assumer que la loi n'est pas normale car le test de shapiro effectué" sur notre échantillon nous retourne une p-value inférieure à 0.05 
 
 ```{r fatalitiesDistib}
 ggplot(shootings.quantitative, aes(x=shootings.quantitative$Fatalities)) +
-  geom_histogram(aes(y = ..density..), colour = "black", fill="darkorchid1") +
-  geom_density()
-
+  geom_histogram(aes(y = ..density..), colour = "black", fill="deepskyblue") +
+  geom_density() +
+  xlab("Fatalities") +
+  ggtitle("Densité du nombre de morts par fusillade de masse")
 ```
 
 On remarque que la distribution ressemble à une loi exponentielle, pour le tester on va utiliser un test "goodness of fit"
@@ -118,17 +122,17 @@ ks.test(shootings.quantitative$Fatalities, "pexp", fit$estimate)
 
 ```
 
-## Statistiques sur le nombre de blessés
+#### Nombre de blessés
 
 ```{r injured}
 summary(shootings.quantitative$Injured)
 ```
 
-
 ```{r injuredCI}
 CI(shootings.quantitative$Injured, ci=0.95)
 ```
 
+L'intervale de confiance est de [9.512986; 2.786377] avec une moyenne de 6.149682
 
 ```{r injuredOutliers}
 injured_outliers <- boxplot.stats(shootings.quantitative$Injured)$out
@@ -136,8 +140,6 @@ injured_outliers_row <- which(shootings.quantitative$Injured %in% c(injured_outl
  
 shootings[injured_outliers_row,]
 ```
-
-# Distribution
 
 ```{r injuredDistibTest}
 shapiro.test(shootings.quantitative$Injured)
@@ -158,7 +160,7 @@ fit <- fitdistr(shootings.quantitative$Injured, "exponential")
 ks.test(shootings.quantitative$Injured, "pexp", fit$estimate)
 ```
 
-## Statistiques sur le nombre total de victimes
+#### Nombre total de victimes
 
 ```{r victims}
 summary(shootings.quantitative$Total.Victims)
@@ -185,7 +187,9 @@ On peux assumer que la loi n'est pas normale car p-value <= 0.05
 ```{r victimsDistib}
 ggplot(shootings.quantitative, aes(x=Total.Victims)) +
   geom_histogram(aes(y = ..density..), colour = "black", fill="darkorchid1") +
-  geom_density()
+  geom_density() + 
+  xlab("Total victims") +
+  ggtitle("Densité du nombre de victimes par fusillade de masse")
 ```
 
 On remarque que la distribution ressemble à une loi exponentielle, pour le tester on va utiliser un test "goodness of fit"
@@ -195,7 +199,7 @@ fit <- fitdistr(shootings.quantitative$Total.Victims, "exponential")
 ks.test(shootings.quantitative$Total.Victims, "pexp", fit$estimate)
 ```
 
-## Statistiques sur le nombre de policier tués
+#### Nombre de policier tués
 
 ```{r policeman}
 summary(shootings.quantitative$Policeman.Killed)
@@ -222,16 +226,19 @@ On peux assumer que la loi n'est pas normale car p-value <= 0.05
 ```{r policemanDistib}
 ggplot(shootings.quantitative, aes(x=Policeman.Killed)) +
   geom_histogram(aes(y = ..density..), colour = "black", fill="darkorchid1") +
-  geom_density()
+  geom_density() +
+  xlab("Policeman fatalities") +
+  ggtitle("Density of policemans killed by mass shootings")
 ```
 
-## Statistiques sur l'age
+#### Age
 
 ```{r age}
 summary(shootings.ages$age)
 ```
 
 ```{r ageCI}
+shootings.ages$age <- as.numeric(shootings.ages$age)
 CI(shootings.ages$age, ci=0.95)
 ```
 
@@ -252,59 +259,66 @@ On peux assumer que la loi n'est pas normale car p-value <= 0.05
 ```{r ageDistib}
 ggplot(shootings.ages, aes(x=age)) +
   geom_histogram(aes(y = ..density..), colour = "black", fill="darkorchid1") +
-  geom_density()
+  geom_density() + 
+  ggtitle("Density of shooters ages for mass shootings")
 ```
 
-# Associations with caterorical variables
+### 3.2)
 
 ```{r FatalitiesByMentalHeatlh}
 ggplot(data=shootings, aes(x=Mental.Health.Issues, y=Fatalities, fill=Mental.Health.Issues)) +
-  scale_fill_manual(values=c("orange1", "grey48", "firebrick1")) +
-  geom_bar(stat="identity")
+  scale_fill_manual(values=c("orange1", "firebrick1")) +
+  geom_bar(stat="identity") +
+  ggtitle("Fatalities by mental health of shooter")
 ```
 
 ```{r VictimsByMentalHealth}
 ggplot(data=shootings, aes(x=Mental.Health.Issues, y=Total.victims, fill=Mental.Health.Issues)) +
-  scale_fill_manual(values=c("orange1", "grey48", "firebrick1")) +
-  geom_bar(stat="identity")
+  scale_fill_manual(values=c("orange1", "firebrick1")) +
+  geom_bar(stat="identity") +
+  ggtitle("Total victims by mental health of shooter")
 ```
 
 ```{r FatalitiesByYear}
 ggplot(shootings, aes(x=Year, y=Fatalities)) +
-  stat_summary(fun.y = sum, geom="line")
+  stat_summary(fun.y = sum, geom="line") +
+  ggtitle("Total fatalities by mass shootings for each year between 1966 and 2017")
 ```
 
 ```{r VictimsByYear}
 ggplot(shootings, aes(x=Year, y=Total.victims)) +
-  stat_summary(fun.y = sum, geom="line")
+  stat_summary(fun.y = sum, geom="line") +
+  ggtitle("Total victims by mass shootings for each year between 1966 and 2017")
 ```
 
 ```{r FatalitiesByIncidentArea, fig.width=16, fig.height=6}
 ggplot(data=shootings, aes(x=reorder(Incident.Area, -Fatalities, function(x){ sum(x) }), y=Fatalities, fill=Incident.Area)) +
   theme(axis.text.x=element_text(angle=-30,hjust=0)) +
   xlab("Incident Area") +
-  geom_bar(stat="identity")
+  geom_bar(stat="identity") +
+  ggtitle("Total fatalities by area types")
 ```
 
 ```{r VictimsByIncidentArea, fig.width=16, fig.height=6}
-ggplot(data=shootings, aes(x=reorder(Incident.Area, -Total.victims, function(x){ sum(x) }), y=Total.victims, fill=Incident.Area)) +
+ggplot(data=shootings, aes(x=reorder(Incident.Area, -Total.victims, function(x){ sum(x) }), y=Total.victims, fill=Incident.Area), na.rm = TRUE) +
   theme(axis.text.x=element_text(angle=-30,hjust=0)) +
   xlab("Incident Area") +
-  geom_bar(stat="identity")
+  geom_bar(stat="identity", na.rm = TRUE) +
+  ggtitle("Total victims by area types")
 ```
-
-Age Year
 
 ```{r AgeByYear}
 ggplot(shootings, aes(x=Year, y=AverageAge)) +
   stat_summary(fun.y = mean, geom="line", na.rm = TRUE) +
-  geom_smooth(na.rm = TRUE)
+  geom_smooth(na.rm = TRUE) +
+  ggtitle("Average age of shooter by year")
 ```
 
 ```{r rowByYears}
 ggplot(shootings, aes(x=Year, fill=..count..)) +
   geom_histogram(aes(y = stat(count)), colour="grey48", binwidth = 1) +
-  scale_fill_gradient(low='white', high='orangered', trans = "pseudo_log")
+  scale_fill_gradient(low='white', high='orangered', trans = "pseudo_log") +
+  ggtitle("Number of mass shootings for each years")
 ```
 
 
@@ -312,7 +326,8 @@ ggplot(shootings, aes(x=Year, fill=..count..)) +
 day_order <- c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
 ggplot(data=shootings, aes(x=factor(Day, level = day_order), fill=Day)) +
   xlab("Day of week") +
-  geom_bar()
+  geom_bar() +
+  ggtitle("Number of mass shooting by day of week")
 ```
 
 ```{r rowByMonth}
@@ -320,10 +335,56 @@ month_order <- c('January', 'February', 'March', 'April', 'May', 'June', 'July',
 ggplot(data=shootings, aes(x=factor(Month, level = month_order), fill=Month)) +
   theme(axis.text.x=element_text(angle=-30,hjust=0)) +
   xlab("Month") +
-  geom_bar()
+  geom_bar() +
+  ggtitle("Number of mass shootings by month")
 ```
 
-# Test des correlations
+### 3.4)
+
+Malgrés la distribution non normale de notre échantillon, nous avons effectué des test de Student pour comparer la moyenne d'une variable quantitative à une variable qualitative à deux niveaux (deux valeurs possible). Ces tests nous permettes de dire si une valeur a une influence sur une autre.
+
+```{r tTestsTotalVictimsMental}
+t.test(shootings$Total.victims ~ shootings$Mental.Health.Issues)
+```
+
+```{r tTestsTotalVictimsOpenClose}
+t.test(shootings$Total.victims ~ shootings$Open.Close.Location)
+```
+
+La p-value étant supérieur à 0.05, le nombre de victime est bel est bien influencé par l'accessibilité du lieu (si le lieu était ouvert au public ou non).
+
+```{r tTestsTotalVictimsGender}
+t.test(shootings$Total.victims ~ shootings$Gender)
+```
+
+La p-value étant supérieur à 0.05, le nombre de victime est bel est bien influencé par le genre du tireur dans notre échantillons.
+
+```{r tTestsAgeMental}
+t.test(shootings$AverageAge ~ shootings$Mental.Health.Issues)
+```
+
+La p-value étant supérieur à 0.05, l'age du tireur influe bien sur ses troubles mentaux.
+
+```{r tTestsAgeOpenClose}
+t.test(shootings$AverageAge ~ shootings$Open.Close.Location)
+```
+
+La p-value étant supérieur à 0.05, l'age du tireur influe bien sur ses troubles mentaux.
+
+```{r tTestsAgeGender}
+t.test(shootings$Age ~ shootings$Gender)
+```
+
+### 3.4) correlations
+
+Pour créer une matrice de correlations, on va utiliser la fonction `cor`
+
+```{r correlations}
+cor(shootings.quantitative, use = "complete.obs")
+```
+On remarque des correlations importantes au niveau des Fatalities, Injured et Total.Victims
+
+On peut aussi tester la correlation de deux colonnes en utilisant un text ANOVA, cette fois-ci avec des données qualitatives
 
 ```{r anovaFatalitiesRace}
 summary(aov(Fatalities ~ Race, data = shootings))
@@ -333,6 +394,7 @@ summary(aov(Fatalities ~ Race, data = shootings))
 summary(aov(Total.victims ~ Race, data = shootings))
 ```
 
+Le nombre de mort n'est pas lié à la race du tireur. Cependant le nombre de victime l'est.
 
 
 ```{r anovaFatalitiesByWeaponTypes}
@@ -343,54 +405,27 @@ summary(aov(Fatalities ~ Weapon.Type, data = shootings))
 summary(aov(Total.victims ~ Weapon.Type, data = shootings))
 ```
 
+On remarque que le nombre de mort et de victime est fortement lié au type de l'arme utilisé.
 
 ```{r anovaFatalitiesByCause}
-summary(aov(Fatalities ~ Cause, data = filter(shootings, Cause != "unknown")))
+summary(aov(Fatalities ~ Cause, data = shootings))
 ```
 
 ```{r anovaVictimsByCause}
-summary(aov(Total.victims ~ Cause, data = filter(shootings, Cause != "unknown")))
+summary(aov(Total.victims ~ Cause, data = shootings))
 ```
 
+Les causes de la fusillade de masses ne sont pas liés au nombre de mort et/ou victimes.
 
 ```{r anovaAgeByCause}
-summary(aov(AverageAge ~ Cause, data = filter(shootings, Cause != "unknown")))
+summary(aov(AverageAge ~ Cause, data = shootings))
 ```
 
-3.3
+La p-value étant supérieure à 0.05, on peux estimer que la cause d'une fusillade est lié à l'age du tireur.
 
-Total Victims
+### 3.5)
 
-```{r setupTTest, echo=FALSE}
-```
-
-```{r tTestsTotalVictimsMental}
-t.test(shootings$Total.victims ~ shootings$Mental.Health.Issues)
-```
-
-```{r tTestsTotalVictimsOpenClose}
-t.test(shootings$Total.victims ~ shootings$Open.Close.Location)
-```
-
-```{r tTestsTotalVictimsGender}
-t.test(shootings$Total.victims ~ shootings$Gender)
-```
-
-Age
-
-```{r tTestsAgeMental}
-t.test(shootings$AverageAge ~ shootings$Mental.Health.Issues)
-```
-
-```{r tTestsAgeOpenClose}
-t.test(shootings$AverageAge ~ shootings$Open.Close.Location)
-```
-
-```{r tTestsAgeGender}
-t.test(shootings$Age ~ shootings$Gender)
-```
-
-3.5
+Pour analyser les sommes des victimes, blessés et morts par années, on va d'abord créer un nouveau data frame les contenants :
 
 ```{r VictimsByYear2, echo=FALSE}
 shootings.by.year.victims <- shootings %>%
@@ -407,13 +442,17 @@ shootings.by.year.injured <- shootings %>%
 
 shootings.by.year <- merge(shootings.by.year.fatalities, shootings.by.year.victims, by = c("Year"))
 shootings.by.year <- merge(shootings.by.year, shootings.by.year.injured, by = c("Year"))
+shootings.by.year
 ```
 
 ```{r shootingsByYearVictims}
 ggplot(shootings.by.year, aes(x=Year, y=Total.victims)) +
   geom_point(size=2, aes(size=20)) + 
-  stat_summary(fun.y = sum, geom="line")
+  stat_summary(fun.y = sum, geom="line") +
+  ggtitle("Number of death due to mass shooting by year")
 ```
+
+On remarque que le nombre de victimes est en forte hausse depuis 2010.
 
 ```{r shootingsByYearAll, fig.width=16, fig.height=6}
 ggplot(shootings.by.year, aes(x=Year)) +
@@ -421,11 +460,13 @@ ggplot(shootings.by.year, aes(x=Year)) +
   geom_line(aes(Year, Injured, color="Injured"), size=1) +
   geom_line(aes(Year, Total.victims, color="Total Victims"), size=1) +
   scale_colour_manual(values = c("Fatalities" = "firebrick1", "Injured" = "orange", "Total Victims" = "gray40")) +
-  ylab("Total")
+  ylab("Total") +
+  ggtitle("Evolutions of deaths, injured, and total victims by year du to mass shootings")
 ```
 
+On peut remarquer une chute du nombre de morts par rapport au nombre de blessés dans les dernières année malgrés la forte hausse des victimes dès les année 2010.
 
-```{r stack}
+```{r stack, fig.width=16, fig.height=6}
 shootings$Total.victims <- as.numeric(shootings$Total.victims)
 shootings$Injured <- as.numeric(shootings$Injured)
 shootings$Fatalities <- as.numeric(shootings$Fatalities)
@@ -440,8 +481,15 @@ data <- data  %>%
   dplyr::mutate(percentage = n / sum(n))
 
 ggplot(data, aes(x=Year, y = percentage, fill = variable)) +
-  geom_area(color = "black")
+  geom_area(color = "black") +
+  ggtitle("Evolutions of proportion between fatalities and injured by year due to mass shootings")
 ```
+
+La proportion est assez ératique et ne semble pas avoir de tendance générale malgrés certains extremes.
+
+### 3.6)
+
+Pour faire des prédictions sur le nombre total de victimes on va d'abord créer nos modèles et vérifier leurs importance et répresentation
 
 ```{r victimsPredictions}
 victims.regression.linear <- lm(Total.victims ~ Year, data=shootings.by.year)
@@ -449,26 +497,11 @@ victims.regression.linear <- lm(Total.victims ~ Year, data=shootings.by.year)
 summary(victims.regression.linear)
 ```
 
-Une régression linéaire n'est pas satisfaisante
-
 ```{r victimsPredictionsExp}
 victims.regression.exp <- lm(log(Total.victims) ~ Year, data=shootings.by.year)
 
 summary(victims.regression.exp)
 ```
-
-```{r regressionPlot}
-shootings.by.year %>%
-  mutate( model = predict(victims.regression.linear)) %>%
-  mutate( model.exp = exp(predict(victims.regression.exp))) %>%
-  ggplot(x = Year) +
-  geom_point( aes(Year, Total.victims)) +
-  geom_line( aes(Year, model, colour="linear")) +
-  geom_line( aes(Year, model.exp, colour="exp")) +
-  scale_colour_manual(name = 'Regressions', values =c('linear'='orange','exp'='firebrick1'))
-```
-
-
 
 ```{r 2010victimsPredictions}
 shootings.by.year.2010 <- filter(shootings.by.year, Year >= 2010)
@@ -478,24 +511,69 @@ victims.regression.linear.2010 <- lm(Total.victims ~ Year, data=shootings.by.yea
 summary(victims.regression.linear.2010)
 ```
 
-Une régression linéaire n'est pas satisfaisante
-
 ```{r 2010victimsPredictionsExp}
 victims.regression.exp.2010 <- lm(log(Total.victims) ~ Year, data=shootings.by.year.2010)
 
 summary(victims.regression.exp.2010)
 ```
 
-```{r 2010regressionPlot}
+On va maintenant tester les importances de nos 4 modèles
+
+```{r testsOfModel1}
+par(mfrow = c(2, 2))
+plot(victims.regression.linear)
+```
+
+```{r testsOfModel2}
+par(mfrow = c(2, 2))
+plot(victims.regression.exp)
+```
+
+```{r testsOfModel3}
+par(mfrow = c(2, 2))
+plot(victims.regression.linear.2010)
+```
+
+```{r testsOfModel4}
+par(mfrow = c(2, 2))
+plot(victims.regression.exp.2010)
+```
+
+Sur nos quatres modèles, aucuns ne sont assez satisfaisants, il faudrait retirer des outliers pour que nos modèles soit représentatifs mais cela serait un cas de cherry-picking.
+
+Les deux modèles entre 1966 et 2017 sembles les plus réprésentatifs pour la  période mais ne prennent pas correctement en compte les évolutions du nombre de victime sur les dernières année de l'échantillon. 
+
+Par manque de donnée, les modèles entre 2010 et 2017 sont aussi très peu représentatifs à en juger par leurs graphiques précedents.
+
+Les deux modèles entre 1966 et 2017 se traduisent sur graphique comme ceci :
+
+```{r regressionPlot, fig.height=6, fig.width=16}
+shootings.by.year %>%
+  mutate( model = predict(victims.regression.linear)) %>%
+  mutate( model.exp = exp(predict(victims.regression.exp))) %>%
+  ggplot(x = Year) +
+  geom_point( aes(Year, Total.victims)) +
+  geom_line( aes(Year, model, colour="linear"), size=1) +
+  geom_line( aes(Year, model.exp, colour="exp"), size=1) +
+  scale_colour_manual(name = 'Regressions', values =c('linear'='orange','exp'='firebrick1')) +
+  ggtitle("Evolution of total victims by year bewteen 1966 and 2017 and the evolution model")
+```
+
+Les deux modèles entre 2010 et 2017 se traduisent sur graphique comme ceci :
+
+```{r 2010regressionPlot, fig.height=6, fig.width=16}
 shootings.by.year.2010 %>%
   mutate( model = predict(victims.regression.linear.2010)) %>%
   mutate( model.exp = exp(predict(victims.regression.exp.2010))) %>%
   ggplot(x = Year) +
   geom_point( aes(Year, Total.victims) ) +
-  geom_line( aes(Year, model, colour="linear")) +
-  geom_line( aes(Year, model.exp, colour="exp")) +
-  scale_colour_manual(name = 'Regressions', values =c('linear'='orange','exp'='firebrick1'))
+  geom_line( aes(Year, model, colour="linear"), size=1) +
+  geom_line( aes(Year, model.exp, colour="exp"), size=1) +
+  scale_colour_manual(name = 'Regressions', values =c('linear'='orange','exp'='firebrick1')) +
+  ggtitle("Evolution of total victims by year bewteen 2010 and 2017 and the evolution model")
 ```
+
+Pour effectuer les predictions à differents moments dans le futur on va utiliser la fonction `predict` :
 
 ```{r predictFuture}
 dates <- data.frame(Year=c(2018, 2020, 2025, 2030, 2050, 2075, 2100))
@@ -503,7 +581,6 @@ predict(victims.regression.linear, dates)
 ```
 
 ```{r predictFutureExp}
-dates <- data.frame(Year=c(2018, 2020, 2025, 2030, 2050, 2075, 2100))
 exp(predict(victims.regression.exp, dates))
 ```
 
@@ -513,11 +590,15 @@ predict(victims.regression.linear.2010, dates)
 ```
 
 ```{r predictFutureExp2010}
-dates <- data.frame(Year=c(2018, 2020, 2025, 2030, 2050, 2075, 2100))
+dates <- data.frame(Year=c(2018, 2020, 2025, 2030, 2035))
 exp(predict(victims.regression.exp.2010, dates))
 ```
 
-4
+On remarque que certaines prédictions semble réaliste et d'autrs comme l'exponentielle entre 2010 et 2017 deviennent très vite irréalistes.
+
+Le modèles exponentiel semble mieux convenir pour la partie [1966;2017] alors que le modèle linéaire convient mieux à la partie [2010; 2017]
+
+## 4
 
 ```{r MapScatterplot1}
 qmplot(Longitude, Latitude, data = shootings, maptype = "toner-lite", color = "red", size = I(1)) +
@@ -525,7 +606,7 @@ qmplot(Longitude, Latitude, data = shootings, maptype = "toner-lite", color = "r
   scale_color_manual(labels = c("Shootings"), values = c("red"))
 ```
 
-5
+## 5
 
 ```{r MapKmeansCluster}
 
@@ -543,7 +624,7 @@ qmplot(Longitude, Latitude, data = shootings_bis, maptype = "terrain-background"
 
 ```
 
-6
+## 6
 ```{r MapHierarchicalCluster}
 hierachical.cluster <- hclust(dist(shootings[c('Latitude', 'Longitude', 'Total.victims')]))
 cut_cluster <- cutree(hierachical.cluster, k = 6)
@@ -556,7 +637,7 @@ qmplot(Longitude, Latitude, data = shootings_bis, maptype = "terrain-background"
                      values =  c("red", "chocolate", "green", "blue", "yellow", "deeppink"))
 ```
 
-7
+## 7
 
 ```{r GunLicenseData, echo=FALSE}
 gun_license <- read_csv(file="US_License_Cleaned.csv")
@@ -608,8 +689,6 @@ Data %>%
   geom_line( aes(ShopsPct, model, colour="linear")) +
   scale_colour_manual(name = 'Regressions', values =c('linear'='orange'))
 ```
-
-8
 
 ```{r EpicMap}
 shootings.State.data <- shootings %>%
