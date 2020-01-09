@@ -8,13 +8,13 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Sys.setlocale("LC_TIME", "English")
 
-require(ggmap)
-require(tidyverse)
 require(ggplot2)
+require(tidyverse)
 require(lubridate)
 require(scales)
 require(usmap)
 require(grid)
+require(ggmap)
 require(Rmisc)
 require(MASS)
 require(reshape2)
@@ -40,6 +40,17 @@ shootings.quantitative <- data.frame(
   Age2 = shootings$Age2
 )
 
+
+shootings$Age <- as.numeric(shootings$Age)
+shootings$Age2 <- as.numeric(shootings$Age2)
+shootings$Policeman.Killed <- as.numeric(shootings$Policeman.Killed)
+shootings$AverageAge <- as.numeric(shootings$AverageAge)
+
+
+shootings.ages <- melt(data.frame(shootings.quantitative$Age, shootings.quantitative$Age2))
+shootings.ages$variable <- NULL
+colnames(shootings.ages) <- c("age")
+shootings.ages$age <- as.numeric(shootings.ages$age)
 ```
 
 ## Introduction
@@ -56,10 +67,6 @@ ggplot(stack(shootings.quantitative[,-c(5,6)]), aes(x = ind, y = values, fill = 
 On fait le graphique pour Age/Age2 séparéments car il y a plus de valeurs
 
 ```{r AgeBoxplot}
-shootings.ages <- melt(data.frame(shootings.quantitative$Age, shootings.quantitative$Age2))
-shootings.ages$variable <- NULL
-colnames(shootings.ages) <- c("age")
-
 ggplot(stack(shootings.ages), aes(x = ind, y = values, fill = ind)) +
   geom_boxplot() + scale_y_continuous(trans='pseudo_log')
 
@@ -188,12 +195,12 @@ ks.test(shootings.quantitative$Total.Victims, "pexp", fit$estimate)
 ## Statistiques sur le nombre de policier tués
 
 ```{r policeman}
-summary(shootings.quantitative$Policeman.Killed)
+summary(as.numeric(shootings.quantitative$Policeman.Killed))
 ```
 
 
 ```{r policemanCI}
-CI(shootings.quantitative$Policeman.Killed, ci=0.95)
+CI(as.numeric(shootings.quantitative$Policeman.Killed, ci=0.95))
 ```
 
 
@@ -221,11 +228,9 @@ ggplot(shootings.quantitative, aes(x=Policeman.Killed)) +
 summary(shootings.ages$age)
 ```
 
-
 ```{r ageCI}
 CI(shootings.ages$age, ci=0.95)
 ```
-
 
 ```{r ageOutliers}
 ages_outliers <- boxplot.stats(shootings.ages$age)$out
@@ -370,13 +375,6 @@ t.test(shootings$Total.victims ~ shootings$Gender)
 
 Age
 
-```{r tTestsAgeSetup}
-shootings$Age <- as.numeric(shootings$Age)
-shootings$Age2 <- as.numeric(shootings$Age2)
-shootings$AverageAge <- as.numeric(shootings$AverageAge)
-```
-
-
 ```{r tTestsAgeMental}
 t.test(shootings$AverageAge ~ shootings$Mental.Health.Issues)
 ```
@@ -391,18 +389,130 @@ t.test(shootings$Age ~ shootings$Gender)
 
 3.5
 
-```{r VictimsByYear2}
-shootings.quantitativeSums <- shootings %>%
-   group_by(Year) %>%
-   summarize()
+```{r VictimsByYear2, echo=FALSE}
+shootings.by.year.victims <- shootings %>%
+  dplyr::group_by(Year) %>%
+  dplyr::summarise(Total.victims = sum(Total.victims))
 
-shootings.Year <- shootings %>%
-  group_by(State) %>%
-  summarise() %>%
-  arrange(desc(Year))
+shootings.by.year.fatalities <- shootings %>%
+  dplyr::group_by(Year) %>%
+  dplyr::summarise(Fatalities = sum(Fatalities))
 
-ggplot(shootings, aes(x=Year, y=Total.victims)) +
-  geom_point(size=2, fun = sum, aes(size=20))
+shootings.by.year.injured <- shootings %>%
+  dplyr::group_by(Year) %>%
+  dplyr::summarise(Injured = sum(Injured))
+
+shootings.by.year <- merge(shootings.by.year.fatalities, shootings.by.year.victims, by = c("Year"))
+shootings.by.year <- merge(shootings.by.year, shootings.by.year.injured, by = c("Year"))
+```
+
+```{r shootingsByYearVictims}
+ggplot(shootings.by.year, aes(x=Year, y=Total.victims)) +
+  geom_point(size=2, aes(size=20)) + 
+  stat_summary(fun.y = sum, geom="line")
+```
+
+```{r shootingsByYearAll, fig.width=16, fig.height=6}
+ggplot(shootings.by.year, aes(x=Year)) +
+  geom_line(aes(Year, Fatalities, color="Fatalities"), size=1) +
+  geom_line(aes(Year, Injured, color="Injured"), size=1) +
+  geom_line(aes(Year, Total.victims, color="Total Victims"), size=1) +
+  scale_colour_manual(values = c("Fatalities" = "firebrick1", "Injured" = "orange", "Total Victims" = "gray40")) +
+  ylab("Total")
+```
+
+
+```{r stack}
+shootings$Total.victims <- as.numeric(shootings$Total.victims)
+shootings$Injured <- as.numeric(shootings$Injured)
+shootings$Fatalities <- as.numeric(shootings$Fatalities)
+
+data <- shootings %>% 
+  gather(key = "variable", value = "value", Injured, Fatalities)
+data <- data[,c("variable", "value", "Year")]
+
+data <- data  %>%
+  dplyr::group_by(Year, variable) %>%
+  dplyr::summarise(n = sum(value)) %>%
+  dplyr::mutate(percentage = n / sum(n))
+
+View(data)
+ggplot(data, aes(x=Year, y = percentage, fill = variable)) +
+  geom_area(color = "black")
+```
+
+```{r victimsPredictions}
+victims.regression.linear <- lm(Total.victims ~ Year, data=shootings.by.year)
+
+summary(victims.regression.linear)
+```
+
+Une régression linéaire n'est pas satisfaisante
+
+```{r victimsPredictions}
+victims.regression.exp <- lm(log(Total.victims) ~ Year, data=shootings.by.year)
+
+summary(victims.regression.exp)
+```
+
+```{r regressionPlot}
+shootings.by.year %>%
+  mutate( model = predict(victims.regression.linear)) %>%
+  mutate( model.exp = exp(predict(victims.regression.exp))) %>%
+  ggplot(x = Year) +
+  geom_point( aes(Year, Total.victims)) +
+  geom_line( aes(Year, model, colour="linear")) +
+  geom_line( aes(Year, model.exp, colour="exp")) +
+  scale_colour_manual(name = 'Regressions', values =c('linear'='orange','exp'='firebrick1'))
+```
+
+
+
+```{r 2010victimsPredictions}
+shootings.by.year.2010 <- filter(shootings.by.year, Year >= 2010)
+
+victims.regression.linear.2010 <- lm(Total.victims ~ Year, data=shootings.by.year.2010)
+
+summary(victims.regression.linear.2010)
+```
+
+Une régression linéaire n'est pas satisfaisante
+
+```{r 2010victimsPredictions}
+victims.regression.exp.2010 <- lm(log(Total.victims) ~ Year, data=shootings.by.year.2010)
+
+summary(victims.regression.exp.2010)
+```
+
+```{r 2010regressionPlot}
+shootings.by.year.2010 %>%
+  mutate( model = predict(victims.regression.linear.2010)) %>%
+  mutate( model.exp = exp(predict(victims.regression.exp.2010))) %>%
+  ggplot(x = Year) +
+  geom_point( aes(Year, Total.victims) ) +
+  geom_line( aes(Year, model, colour="linear")) +
+  geom_line( aes(Year, model.exp, colour="exp")) +
+  scale_colour_manual(name = 'Regressions', values =c('linear'='orange','exp'='firebrick1'))
+```
+
+```{r predictFuture}
+dates <- data.frame(Year=c(2018, 2020, 2025, 2030, 2050, 2075, 2100))
+predict(victims.regression.linear, dates)
+```
+
+```{r predictFutureExp}
+dates <- data.frame(Year=c(2018, 2020, 2025, 2030, 2050, 2075, 2100))
+exp(predict(victims.regression.exp, dates))
+```
+
+```{r predictFuture2010}
+dates <- data.frame(Year=c(2018, 2020, 2025, 2030, 2050, 2075, 2100))
+predict(victims.regression.linear.2010, dates)
+```
+
+```{r predictFutureExp2010}
+dates <- data.frame(Year=c(2018, 2020, 2025, 2030, 2050, 2075, 2100))
+exp(predict(victims.regression.exp.2010, dates))
 ```
 
 4
