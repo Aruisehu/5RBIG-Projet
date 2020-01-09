@@ -3,7 +3,7 @@ title: "Analysis of mass shootings in the USA between 1966 and 2017"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, echo=FALSE}
 knitr::opts_chunk$set(echo = TRUE) 
 
 Sys.setlocale("LC_TIME", "English")
@@ -243,3 +243,108 @@ ggplot(shootings.ages, aes(x=age)) +
   geom_density()
 ```
 
+# Associations with caterorical variables
+
+```{r FatalitiesByMentalHeatlh}
+ggplot(data=shootings, aes(x=Mental.Health.Issues, y=Fatalities, fill=Mental.Health.Issues)) +
+  scale_fill_manual(values=c("orange1", "grey48", "firebrick1")) +
+  geom_bar(stat="identity")
+```
+
+```{r VictimsByMentalHealth}
+ggplot(data=shootings, aes(x=Mental.Health.Issues, y=Total.victims, fill=Mental.Health.Issues)) +
+  scale_fill_manual(values=c("orange1", "grey48", "firebrick1")) +
+  geom_bar(stat="identity")
+```
+
+```{r FatalitiesByYear}
+ggplot(shootings, aes(x=Year, y=Fatalities)) +
+  stat_summary(fun.y = sum, geom="line")
+```
+
+```{r VictimsByYear}
+ggplot(shootings, aes(x=Year, y=Total.victims)) +
+  stat_summary(fun.y = sum, geom="line")
+```
+
+```{r VictimsByIncidentArea, fig.width=16, fig.height=6}
+ggplot(data=shootings, aes(x=reorder(Incident.Area, -Fatalities, function(x){ sum(x) }), y=Fatalities, fill=Incident.Area)) +
+  theme(axis.text.x=element_text(angle=-30,hjust=0)) +
+  xlab("Incident Area") +
+  geom_bar(stat="identity")
+```
+
+```{r VictimsByIncidentArea, fig.width=16, fig.height=6}
+ggplot(data=shootings, aes(x=reorder(Incident.Area, -Total.victims, function(x){ sum(x) }), y=Total.victims, fill=Incident.Area)) +
+  theme(axis.text.x=element_text(angle=-30,hjust=0)) +
+  xlab("Incident Area") +
+  geom_bar(stat="identity")
+```
+
+Age Year
+
+```{r AgeByYear}
+ggplot(shootings, aes(x=Year, y=AverageAge)) +
+  stat_summary(fun.y = mean, geom="line", na.rm = TRUE) +
+  geom_smooth(na.rm = TRUE)
+```
+
+```{r rowByYears}
+ggplot(shootings, aes(x=Year, fill=..count..)) +
+  geom_histogram(aes(y = stat(count)), colour="grey48", binwidth = 1) +
+  scale_fill_gradient(low='white', high='orangered', trans = "pseudo_log")
+```
+
+
+```{r rowByDayOfWeek}
+day_order <- c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
+ggplot(data=shootings, aes(x=factor(Day, level = day_order), fill=Day)) +
+  xlab("Day of week") +
+  geom_bar()
+```
+
+```{r rowByMonth}
+month_order <- c('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December')
+ggplot(data=shootings, aes(x=factor(Month, level = month_order), fill=Month)) +
+  theme(axis.text.x=element_text(angle=-30,hjust=0)) +
+  xlab("Month") +
+  geom_bar()
+```
+
+# Test des correlations
+
+```{r anovaFatalitiesRace}
+summary(aov(Fatalities ~ Race, data = shootings))
+```
+
+```{r anovaVictimsRace}
+summary(aov(Total.victims ~ Race, data = shootings))
+```
+
+
+
+```{r anovaFatalitiesByWeaponTypes}
+summary(aov(Fatalities ~ Weapon.Type, data = shootings))
+```
+
+```{r anovaVictimsByWeaponTypes}
+summary(aov(Total.victims ~ Weapon.Type, data = shootings))
+```
+
+
+```{r anovaFatalitiesByCause}
+summary(aov(Fatalities ~ Cause, data = filter(shootings, Cause != "unknown")))
+```
+
+```{r anovaVictimsByCause}
+summary(aov(Total.victims ~ Cause, data = filter(shootings, Cause != "unknown")))
+```
+
+
+```{r anovaAgeByCause}
+summary(aov(AverageAge ~ Cause, data = filter(shootings, Cause != "unknown")))
+```
+
+```{r anovaAgeByCause}
+summary(aov(AverageAge ~ Cause, data = filter(shootings, Cause != "unknown")))
+```

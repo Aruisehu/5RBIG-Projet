@@ -50,6 +50,8 @@ shootings$Policeman.Killed <- as.integer(shootings$Policeman.Killed)
 shootings$Age2 <- sapply(map(shootings$Age, function(age) unlist(strsplit(gsub("(.{2})", "\\1;", as.character(age)), ";")[1])[2]), FUN = paste)
 shootings$Age <- sapply(map(shootings$Age, function(age) unlist(strsplit(gsub("(.{2})", "\\1;", as.character(age)), ";")[1])[1]), FUN = paste)
 shootings$Age[shootings$Title == "Ferguson, MO Drive by"] <- NA
+shootings$AverageAge <- rowMeans(shootings[c('Age', 'Age2')], na.rm = TRUE)
+shootings$AverageAge[is.nan(shootings$AverageAge)] <- NA
 
 # Cleaning Gender column
 shootings$Gender <- tolower(shootings$Gender)
@@ -76,6 +78,7 @@ shootings$Race <- replace_na(shootings$Race, "unknown")
 
 # Cleaning of Mental Health Issue colum
 shootings$Mental.Health.Issues <- tolower(shootings$Mental.Health.Issues)
+shootings <- shootings %>% mutate(Mental.Health.Issues = replace(Mental.Health.Issues, Mental.Health.Issues == "unclear", "unknown"))
 shootings$Mental.Health.Issues <- replace_na(shootings$Mental.Health.Issues, "unknown")
 
 # Cleaning of Cause column
@@ -198,13 +201,11 @@ shootings$Incident.Area[shootings$Title == "Pinellas Park High School"] <- "high
 shootings$Incident.Area[shootings$Title == "Nellis Plaza"] <- "restaurant;supermaket"
 shootings$Incident.Area[shootings$Title == "Parkland Coffee Shop"] <- "restaurant"
 shootings$Incident.Area[shootings$Title == "Marysville-Pilchuck High School"] <- "high school"
-shootings$Incident.Area[shootings$Title == "Youth With A Mission and New Life Church"] <- "association;place of whorship"
+shootings$Incident.Area[shootings$Title == "Youth With A Mission and New Life Church"] <- "association;place of worship"
 shootings$Incident.Area[shootings$Title == "Dearborn Post Office"] <- "administrative building"
 shootings$Incident.Area[shootings$Title == "Offices of All-Tech Investment Group and Momentum Securities"] <- "home;company"
 shootings$Incident.Area[shootings$Title == "Planned Parenthood clinic"] <- "street"
 shootings$Incident.Area[shootings$Title == "Massachusetts Abortion Clinic"] <- "hospital"
-
-
 
 # Separate Date in three columns
 shootings$Date <- parse_date_time2(shootings$Date, "mdy", cutoff_2000 = 30)
