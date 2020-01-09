@@ -49,7 +49,10 @@ shootings$Policeman.Killed <- as.integer(shootings$Policeman.Killed)
 # Cleaning of age
 shootings$Age2 <- sapply(map(shootings$Age, function(age) unlist(strsplit(gsub("(.{2})", "\\1;", as.character(age)), ";")[1])[2]), FUN = paste)
 shootings$Age <- sapply(map(shootings$Age, function(age) unlist(strsplit(gsub("(.{2})", "\\1;", as.character(age)), ";")[1])[1]), FUN = paste)
-shootings$Age[shootings$Title == "Ferguson, MO Drive by"] <- NA
+shootings$Age[shootings$Title == "Ferguson, MO Drive by"] <- NA # On retire le 0
+
+shootings$Age <- as.integer(shootings$Age)
+shootings$Age2 <- as.integer(shootings$Age2)
 shootings$AverageAge <- rowMeans(shootings[c('Age', 'Age2')], na.rm = TRUE)
 shootings$AverageAge[is.nan(shootings$AverageAge)] <- NA
 
@@ -207,11 +210,14 @@ shootings$Incident.Area[shootings$Title == "Offices of All-Tech Investment Group
 shootings$Incident.Area[shootings$Title == "Planned Parenthood clinic"] <- "street"
 shootings$Incident.Area[shootings$Title == "Massachusetts Abortion Clinic"] <- "hospital"
 
+
+
 # Separate Date in three columns
 shootings$Date <- parse_date_time2(shootings$Date, "mdy", cutoff_2000 = 30)
 shootings$Day <- format(shootings$Date, format = "%A")
 shootings$Month <- format(shootings$Date, format ='%B')
 shootings$Year <- as.integer(format(shootings$Date, format = "%Y"))
+
 shootings$Date <- NULL
 
 # Second point first step

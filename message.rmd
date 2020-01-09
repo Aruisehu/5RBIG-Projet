@@ -21,7 +21,7 @@ require(reshape2)
 
 rm(list = ls())
 
-shootings <- read_csv(file = "./US_Shootings_Cleaned.csv")
+shootings <- read_csv(file = "./US_Shootings_Cleaned.csv", na = c("unknown", "open;close"))
 
 ## Differents quantitative variables and their meaning:
 
@@ -347,4 +347,60 @@ summary(aov(AverageAge ~ Cause, data = filter(shootings, Cause != "unknown")))
 
 ```{r anovaAgeByCause}
 summary(aov(AverageAge ~ Cause, data = filter(shootings, Cause != "unknown")))
+```
+
+3.3
+
+Total Victims
+
+```{r setupTTest, echo=FALSE}
+```
+
+```{r tTestsTotalVictimsMental}
+t.test(shootings$Total.victims ~ shootings$Mental.Health.Issues)
+```
+
+```{r tTestsTotalVictimsOpenClose}
+t.test(shootings$Total.victims ~ shootings$Open.Close.Location)
+```
+
+```{r tTestsTotalVictimsGender}
+t.test(shootings$Total.victims ~ shootings$Gender)
+```
+
+Age
+
+```{r tTestsAgeSetup}
+shootings$Age <- as.numeric(shootings$Age)
+shootings$Age2 <- as.numeric(shootings$Age2)
+shootings$AverageAge <- as.numeric(shootings$AverageAge)
+```
+
+
+```{r tTestsAgeMental}
+t.test(shootings$AverageAge ~ shootings$Mental.Health.Issues)
+```
+
+```{r tTestsAgeOpenClose}
+t.test(shootings$AverageAge ~ shootings$Open.Close.Location)
+```
+
+```{r tTestsAgeGender}
+t.test(shootings$Age ~ shootings$Gender)
+```
+
+3.5
+
+```{r VictimsByYear}
+shootings.quantitativeSums <- shootings %>%
+   group_by(Year) %>%
+   summarize()
+
+shootings.Year <- shootings %>%
+  group_by(State) %>%
+  summarise() %>%
+  arrange(desc(Year))
+
+ggplot(shootings, aes(x=Year, y=Total.victims)) +
+  geom_point(size=2, fun = sum, aes(size=20))
 ```
