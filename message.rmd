@@ -42,7 +42,11 @@ shootings.quantitative <- data.frame(
 
 ```
 
-## Graphs
+## Introduction
+
+Ce document est une présentation de plusieurs 
+
+## Graphes
 
 ```{r fatalities}
 ggplot(stack(shootings.quantitative[,-c(5,6)]), aes(x = ind, y = values, fill = ind)) +
@@ -63,7 +67,7 @@ ggplot(stack(shootings.ages), aes(x = ind, y = values, fill = ind)) +
 
 ## Statistiques sur le nombre de mort
 
-```{r fatalities}
+```{r fatalitieSummary}
 summary(shootings.quantitative$Fatalities)
 ```
 
@@ -82,7 +86,7 @@ shootings[fatalities_outliers_row,]
 
 # Distribution
 
-```{r fatalitiesDistib}
+```{r fatalitiesDistibTest}
 shapiro.test(shootings.quantitative$Fatalities)
 ```
 
@@ -125,7 +129,7 @@ shootings[injured_outliers_row,]
 
 # Distribution
 
-```{r injuredDistib}
+```{r injuredDistibTest}
 shapiro.test(shootings.quantitative$Injured)
 ```
 
@@ -162,7 +166,7 @@ victims_outliers_row <- which(shootings.quantitative$Total.Victims %in% c(victim
 shootings[victims_outliers_row,]
 ```
 
-```{r victimsDistib}
+```{r victimsDistibTest}
 shapiro.test(shootings.quantitative$Total.Victims)
 ```
 
@@ -199,7 +203,7 @@ policemans_outliers_row <- which(shootings.quantitative$Policeman.Killed %in% c(
 shootings[policemans_outliers_row,]
 ```
 
-```{r policemanDistib}
+```{r policemanDistibTest}
 shapiro.test(shootings.quantitative$Policeman.Killed)
 ```
 
@@ -231,7 +235,7 @@ shootings[ages_outliers_row,]
 
 Age n'a pas d'outliers
 
-```{r ageDistib}
+```{r ageDistibTest}
 shapiro.test(shootings.ages$age)
 ```
 
@@ -267,7 +271,7 @@ ggplot(shootings, aes(x=Year, y=Total.victims)) +
   stat_summary(fun.y = sum, geom="line")
 ```
 
-```{r VictimsByIncidentArea, fig.width=16, fig.height=6}
+```{r FatalitiesByIncidentArea, fig.width=16, fig.height=6}
 ggplot(data=shootings, aes(x=reorder(Incident.Area, -Fatalities, function(x){ sum(x) }), y=Fatalities, fill=Incident.Area)) +
   theme(axis.text.x=element_text(angle=-30,hjust=0)) +
   xlab("Incident Area") +
@@ -345,10 +349,6 @@ summary(aov(Total.victims ~ Cause, data = filter(shootings, Cause != "unknown"))
 summary(aov(AverageAge ~ Cause, data = filter(shootings, Cause != "unknown")))
 ```
 
-```{r anovaAgeByCause}
-summary(aov(AverageAge ~ Cause, data = filter(shootings, Cause != "unknown")))
-```
-
 3.3
 
 Total Victims
@@ -391,7 +391,7 @@ t.test(shootings$Age ~ shootings$Gender)
 
 3.5
 
-```{r VictimsByYear}
+```{r VictimsByYear2}
 shootings.quantitativeSums <- shootings %>%
    group_by(Year) %>%
    summarize()
@@ -403,4 +403,43 @@ shootings.Year <- shootings %>%
 
 ggplot(shootings, aes(x=Year, y=Total.victims)) +
   geom_point(size=2, fun = sum, aes(size=20))
+```
+
+4
+
+```{r MapScatterplot1}
+qmplot(Longitude, Latitude, data = shootings, maptype = "toner-lite", color = "red", size = I(1)) +
+  labs(title = "Shootings' Location\n", x = "", y = "", color = "Legend") +
+  scale_color_manual(labels = c("Shootings"), values = c("red"))
+```
+
+5
+
+```{r MapKmeansCluster}
+shootings.TotalVictims <- shootings[rep(seq_len(dim(shootings)[1]), shootings$Total.victims), 1:25]
+
+clusters <- kmeans(shootings.TotalVictims[c('Latitude', 'Longitude')], 6)
+
+# Save the cluster number in the dataset as column
+shootings.TotalVictims$Clusters <- as.factor(clusters$cluster)
+
+qmplot(Longitude, Latitude, data = shootings.TotalVictims, maptype = "terrain-background", color = Clusters) +
+  labs(title = "K Means clustering Visualition of mass shootings in the US\n", x = "", y = "", color = "Clusters") +
+  scale_color_manual(labels = c("North Central US", "Rockies", "South East Coast", "North East Coast", "South Central US", "West Coast"),
+                     values =  c("red", "chocolate", "green", "blue", "yellow", "deeppink"))
+
+```
+
+6
+```{r MapHierarchicalCluster}
+hierachical.cluster <- hclust(dist(shootings.TotalVictims[c('Latitude', 'Longitude')]))
+plot(hierachical.cluster)
+cut_cluster <- cutree(hierachical.cluster, k = 7)
+
+shootings.TotalVictims$HierarchicalClusters <- as.factor(cut_cluster)
+
+qmplot(Longitude, Latitude, data = shootings.TotalVictims, maptype = "terrain-background", color = HierarchicalClusters) +
+  labs(title = "Hierarchical clustering Visualition of mass shootings in the US\n", x = "", y = "", color = "Clusters") +
+  scale_color_manual(labels = c("South / South East US", "Rockies", "North East Coast", "West Coast", "US Central", "Hawaii", "Alaska"),
+                     values =  c("red", "chocolate", "green", "blue", "yellow", "deeppink", "turquoise2"))
 ```

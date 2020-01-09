@@ -14,7 +14,7 @@ shootings <- read_csv(file = "./US_Shootings_Cleaned.csv")
 
 shootings.TotalVictims <- shootings[rep(seq_len(dim(shootings)[1]), shootings$Total.victims), 1:25]
 
-clusters <- kmeans(shootings.TotalVictims[c('Latitude', 'Longitude')], 7)
+clusters <- kmeans(shootings.TotalVictims[c('Latitude', 'Longitude')], 6)
 
 # Save the cluster number in the dataset as column
 shootings.TotalVictims$Clusters <- as.factor(clusters$cluster)
